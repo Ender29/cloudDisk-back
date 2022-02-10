@@ -6,7 +6,7 @@ import "database/sql"
 type FileMessage struct {
 	FileID   int
 	FileName string
-	Isdir    int8
+	IsDir    int8
 	Category int8
 	FilePath string
 	FileTime string

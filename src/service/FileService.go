@@ -83,7 +83,7 @@ func RenameFile(userName string, message *dao.FileMessage, newName string) {
 		message.Status = 1
 	}
 	if message.Category == 5 {
-		message.Isdir = 1
+		message.IsDir = 1
 		length1 := strconv.Itoa(utf8.RuneCountInString(message.FilePath) + 1)
 		length2 := strconv.Itoa(utf8.RuneCountInString(message.FilePath))
 		length3 := strconv.Itoa(utf8.RuneCountInString(message.FileName) + utf8.RuneCountInString(message.FilePath) + 1)
@@ -108,7 +108,7 @@ func MoveFile(userName string, message *dao.FileMessage, newPath string) {
 		message.Status = 1
 	}
 	if message.Category == 5 {
-		message.Isdir = 1
+		message.IsDir = 1
 		fPath := message.FilePath + message.FileName + "/"
 		flen := strconv.Itoa(len(fPath))
 		sPath := newPath + message.FileName + "/"
@@ -149,7 +149,7 @@ func FileList(userName, parentPath string) []dao.FileMessage {
 			list = append(list, dao.FileMessage{
 				FileID:   id,
 				FileName: name,
-				Isdir:    isDir,
+				IsDir:    isDir,
 				Category: int8(category),
 				FilePath: parentPath,
 				FileTime: ctime,

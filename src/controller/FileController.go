@@ -261,7 +261,7 @@ func CcatalogHandler(c *gin.Context) {
 		message.FileName = fileName
 		message.FilePath = path
 		message.FileTime = thetime
-		message.Isdir = 1
+		message.IsDir = 1
 		message.Category = 5
 		message.FileID, message.Status = service.CreateCatalog(userName, fileName, thetime, path)
 	} else {
@@ -282,7 +282,7 @@ func DeleteFileHandler(c *gin.Context) {
 		service.DeleteFile(&message, userName)
 	}
 	if message.Category == 5 {
-		message.Isdir = 1
+		message.IsDir = 1
 	}
 	message.FileTime = time.Now().Format("2006-01-02 15:04:05")
 	data, _ := json.Marshal(message)
