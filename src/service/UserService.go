@@ -86,7 +86,7 @@ func (rm *RegisterMessage)Register(userPwd string)  {
 		id int NOT NULL AUTO_INCREMENT,
 		parent_path varchar(1024) NOT NULL,
 		file_name varchar(1024) NOT NULL,
-		file_sha1 varchar(64) NOT NULL DEFAULT '',
+		file_md5 varchar(64) NOT NULL DEFAULT '',
 		file_size bigint DEFAULT '0',
 		category int DEFAULT '0',
 		upload_at datetime DEFAULT CURRENT_TIMESTAMP,

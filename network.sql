@@ -23,8 +23,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `tbl_file`;
 CREATE TABLE `tbl_file`  (
   `id` int NOT NULL AUTO_INCREMENT,
-  `file_sha1` char(40) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '文件hash',
-  `file_name` varchar(256) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '文件名',
+  `file_md5` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '文件hash',
+  `file_name` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '文件名',
   `file_size` bigint NULL DEFAULT 0 COMMENT '文件大小',
   `file_addr` varchar(1024) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '文件存储位置',
   `create_at` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建日期',
@@ -32,7 +32,7 @@ CREATE TABLE `tbl_file`  (
   `status` int NOT NULL DEFAULT 0 COMMENT '状态(可用/禁用/已删除等状态)',
   `ext1` int NULL DEFAULT 0 COMMENT '备用字段1',
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `idx_file_hash`(`file_sha1`) USING BTREE,
+  UNIQUE INDEX `idx_file_hash`(`file_md5`) USING BTREE,
   INDEX `idx_status`(`status`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 567 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
@@ -65,8 +65,8 @@ DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user`  (
   `id` int NOT NULL AUTO_INCREMENT,
   `parent_path` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `file_name` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `file_sha1` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
+  `file_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `file_md5` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
   `file_size` bigint NULL DEFAULT 0,
   `category` int NULL DEFAULT 0,
   `upload_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,

@@ -5,11 +5,50 @@ import (
 	mysql "cloudDisk/src/util"
 	"fmt"
 	"log"
+	"path"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 )
 
+var UploadDir = "D:/upload/"
+
+// UploadFile : 上传文件
+func UploadFile(userName, fileMD5, fileName, parentPath, fileSize string) int8 {
+	fileSuffix := path.Ext(UploadDir + fileMD5 + "_" + fileName)
+	var category int8 = 0
+	if fileSuffix == ".wav" || fileSuffix == ".mp3" || fileSuffix == ".au" || fileSuffix == ".aif" || fileSuffix == ".aiff" || fileSuffix == ".ra" || fileSuffix == ".mid" {
+		category = 1
+	}  else if fileSuffix == ".avi" || fileSuffix == ".mp4" || fileSuffix == ".mkv" || fileSuffix == ".wmv" || fileSuffix == ".3gp" || fileSuffix == ".mod" || fileSuffix == ".mov" || fileSuffix == ".ogg"  || fileSuffix == ".rm" || fileSuffix == ".rmvb" || fileSuffix == ".dat"{
+		category = 2
+	} else if fileSuffix == ".png" || fileSuffix == ".gif" || fileSuffix == ".jpg" || fileSuffix == ".raw" || fileSuffix == ".bmp" || fileSuffix == ".tiff" || fileSuffix == ".psd" || fileSuffix == ".svg" {
+		category = 3
+	} else if fileSuffix == ".xls" || fileSuffix == ".xlsx" || fileSuffix == ".csv" || fileSuffix == ".ppt" || fileSuffix == ".doc" || fileSuffix == ".docx" || fileSuffix == ".pptx"{
+		category = 4
+	}
+	sql := "insert into tbl_file (file_md5,file_name,file_size,file_addr) values('" + fileMD5 + "','" + fileName + "','" + fileSize + "','" + UploadDir +"')"
+	////fmt.Println(sql)
+	//stmt, _ := mysql.DBConn().Prepare(sql)
+	//_, err := stmt.Exec()
+	//if err != nil {
+	//	status = 1
+	//}
+	if parentPath != "/" {
+		paths := strings.Split(parentPath, "/")
+		root := "/"
+		for i := 0; i < len(paths); i++ {
+			if paths[i] == "" {
+				continue
+			}
+			CreateCatalog(userName, paths[i], time.Now().Format("2006-01-02 15:04:05"), root)
+			root += paths[i] + "/"
+		}
+	}
+	sql = "INSERT INTO " + userName + " (parent_path,file_name,category,file_size,file_md5) values('" + parentPath + "','" + fileName + "','" + strconv.Itoa(int(category)) + "','" + fileSize + "','" + UploadDir +"')"
+	fmt.Println(sql)
+	return 0
+}
 
 // CreateCatalog : 创建文件夹
 func CreateCatalog(userName, fileName, theTime, path string) (id int, status int8) {

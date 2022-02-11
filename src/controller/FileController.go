@@ -17,26 +17,26 @@ import (
 	"time"
 )
 
-var uploadDir string = "D:\\upload\\"
+
 
 // CheckFileHandler 判断文件是否存在
 func CheckFileHandler(c *gin.Context) {
 	fileMd5 := c.Query("fileMD5")
 
-	isFolderExist, err := util.IsExist(uploadDir + fileMd5)
+	isFolderExist, err := util.IsExist(service.UploadDir + fileMd5)
 	if err != nil {
 		fmt.Println("md5路径不存在")
 	}
 	var fileList []string
 	chunks := 0
 	if isFolderExist {
-		tmp, err := util.ListDir(uploadDir + fileMd5, fileList)
+		tmp, err := util.ListDir(service.UploadDir + fileMd5, fileList)
 		if err != nil {
 			fmt.Println("获取文件列表失败")
 		}
 		chunks = len(tmp)
 	} else {
-		os.Mkdir(uploadDir + fileMd5, 0666)
+		os.Mkdir(service.UploadDir + fileMd5, 0666)
 	}
 	c.JSON(200, gin.H{
 		"status": 0,
@@ -106,15 +106,18 @@ func DownloadFileHandler(c *gin.Context) {
 
 // MergeFileHandler 合并文件
 func MergeFileHandler(c *gin.Context) {
-	md5 := c.Query("fileMD5")
+	fileMD5 := c.Query("fileMD5")
 	fileName := c.Query("fileName")
-	srcDir := uploadDir + md5
+	parentPath := c.Query("parentPath")
+	fileSize := c.Query("fileSize")
+	userName := c.Query("userName")
+	srcDir := service.UploadDir + fileMD5
 	var fileList []string
 	fileList, err := util.ListDir(srcDir, fileList)
 	if err != nil {
 		fmt.Println("获取文件列表失败", err)
 	}
-	f, err := os.OpenFile(uploadDir + fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	f, err := os.OpenFile(service.UploadDir + fileMD5 + "_" + fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		fmt.Println("生成文件失败:", err)
 	}
@@ -125,11 +128,14 @@ func MergeFileHandler(c *gin.Context) {
 		f.Write(data)
 	}
 	defer f.Close()
+	if !strings.HasSuffix(parentPath, "/") {
+		parentPath += "/"
+	}
+	service.UploadFile(userName, fileMD5, fileName, parentPath, fileSize)
 	c.JSON(200, gin.H{
 		"status": 0,
 	})
 }
-
 
 
 // UploadFileHandler :处理文件上传
@@ -142,7 +148,7 @@ func UploadFileHandler(c *gin.Context) {
 	uploadFile, _ := file.Open()
 	defer uploadFile.Close()
 	data, _ :=ioutil.ReadAll(uploadFile)
-	err  := ioutil.WriteFile(uploadDir + fileMD5 + "/" + current, data, 0666)
+	err  := ioutil.WriteFile(service.UploadDir + fileMD5 + "/" + current, data, 0666)
 	if err != nil {
 		fmt.Println("upload: ", err)
 	}
