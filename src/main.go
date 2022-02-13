@@ -14,8 +14,8 @@ func main() {
 	router.POST("/user/logout", controller.LogoutHandler)
 	router.POST("/user/changepwd", controller.ChangePwdHandler)
 	router.POST("/file/createcatalog", controller.CcatalogHandler)
-	router.POST("/file/deletefile", controller.DeleteFileHandler)
-	router.POST("/file/renamefile", controller.RenameFileHandler)
+	router.GET("/file/deletefile", controller.DeleteFileHandler)
+	router.GET("/file/renamefile", controller.RenameFileHandler)
 	router.POST("/file/movefile", controller.MoveFileHandler)
 	router.GET("/file/filelist", controller.FileListHandler)
 

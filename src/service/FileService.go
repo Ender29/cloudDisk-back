@@ -27,13 +27,17 @@ func UploadFile(userName, fileMD5, fileName, parentPath, fileSize string) int8 {
 	} else if fileSuffix == ".xls" || fileSuffix == ".xlsx" || fileSuffix == ".csv" || fileSuffix == ".ppt" || fileSuffix == ".doc" || fileSuffix == ".docx" || fileSuffix == ".pptx"{
 		category = 4
 	}
+	// 后续 需要考虑文件名带单引号的问题
 	sql := "insert into tbl_file (file_md5,file_name,file_size,file_addr) values('" + fileMD5 + "','" + fileName + "','" + fileSize + "','" + UploadDir +"')"
-	////fmt.Println(sql)
-	//stmt, _ := mysql.DBConn().Prepare(sql)
-	//_, err := stmt.Exec()
-	//if err != nil {
-	//	status = 1
-	//}
+	//fmt.Println(sql)
+	stmt, err := mysql.DBConn().Prepare(sql)
+	if err != nil {
+		fmt.Println("UploadFile insert tbl_file:", err)
+	}
+	_, err = stmt.Exec()
+	if err != nil {
+		fmt.Println("UploadFile insert tbl_file:", err)
+	}
 	if parentPath != "/" {
 		paths := strings.Split(parentPath, "/")
 		root := "/"
@@ -41,12 +45,21 @@ func UploadFile(userName, fileMD5, fileName, parentPath, fileSize string) int8 {
 			if paths[i] == "" {
 				continue
 			}
-			CreateCatalog(userName, paths[i], time.Now().Format("2006-01-02 15:04:05"), root)
+			_, status := CreateCatalog(userName, paths[i], time.Now().Format("2006-01-02 15:04:05"), root)
+			fmt.Println("CreateCatalog: ", status)
 			root += paths[i] + "/"
 		}
 	}
-	sql = "INSERT INTO " + userName + " (parent_path,file_name,category,file_size,file_md5) values('" + parentPath + "','" + fileName + "','" + strconv.Itoa(int(category)) + "','" + fileSize + "','" + UploadDir +"')"
+	if !strings.HasSuffix(parentPath, "/") {
+		parentPath += "/"
+	}
+	sql = "INSERT INTO " + userName + " (parent_path,file_name,category,file_size,file_md5) values('" + parentPath + "','" + fileName + "','" + strconv.Itoa(int(category)) + "','" + fileSize + "','" + fileMD5 +"')"
 	fmt.Println(sql)
+	stmt, _ = mysql.DBConn().Prepare(sql)
+	_, err = stmt.Exec()
+	if err != nil {
+		return 2
+	}
 	return 0
 }
 
@@ -123,11 +136,15 @@ func RenameFile(userName string, message *dao.FileMessage, newName string) {
 	}
 	if message.Category == 5 {
 		message.IsDir = 1
-		length1 := strconv.Itoa(utf8.RuneCountInString(message.FilePath) + 1)
-		length2 := strconv.Itoa(utf8.RuneCountInString(message.FilePath))
-		length3 := strconv.Itoa(utf8.RuneCountInString(message.FileName) + utf8.RuneCountInString(message.FilePath) + 1)
-		sql := "update " + userName + " set parent_path=insert(parent_path, " + length1 + ", " + length2 + ",'/" + newName + "') where mid(parent_path, 1, " + length3 + ")='" + message.FilePath + "/" + message.FileName + "'"
-
+		//length1 := strconv.Itoa(utf8.RuneCountInString(message.FilePath))
+		//length2 := strconv.Itoa(utf8.RuneCountInString(message.FilePath))
+		//length3 := strconv.Itoa(utf8.RuneCountInString(message.FileName) + utf8.RuneCountInString(message.FilePath))
+		//sql := "update " + userName + " set parent_path=insert(parent_path, " + length1 + ", " + length2 + ",'/" + newName + "') where mid(parent_path, 1, " + length3 + ")='" + message.FilePath + message.FileName + "'"
+		insertStart := strconv.Itoa(utf8.RuneCountInString(message.FilePath) + 1)
+		insertLen := strconv.Itoa(utf8.RuneCountInString(message.FileName))
+		midLen := strconv.Itoa(utf8.RuneCountInString(message.FileName) + utf8.RuneCountInString(message.FilePath) + 1)
+		sql := "update " + userName + " set parent_path=insert(parent_path, " + insertStart + ", " + insertLen + ",'" + newName + "') where mid(parent_path, 1, " + midLen + ")='" + message.FilePath + message.FileName + "/'"
+		fmt.Println(sql)
 		_, err := mysql.DBConn().Exec(sql)
 		if err != nil {
 			message.Status = 2

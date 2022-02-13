@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"archive/zip"
-	"bytes"
 	"cloudDisk/src/dao"
 	"cloudDisk/src/service"
 	"cloudDisk/src/util"
@@ -10,7 +8,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -47,6 +44,16 @@ func CheckFileHandler(c *gin.Context) {
 
 // DownloadFileHandler :下载文件
 func DownloadFileHandler(c *gin.Context) {
+	userName := c.Query("userName")
+	parentPath := c.Query("parentPath")
+	fileName := c.Query("fileName")
+
+	if !strings.HasSuffix(parentPath, "/") {
+		parentPath += "/"
+	}
+
+}
+/*func DownloadFileHandler(c *gin.Context) {
 	userName := c.Query("userName")
 	parentPath := c.Query("parentPath")
 	fileName := c.Query("fileName")
@@ -102,7 +109,7 @@ func DownloadFileHandler(c *gin.Context) {
 		c.Writer.Write(data)
 	}
 
-}
+}*/
 
 // MergeFileHandler 合并文件
 func MergeFileHandler(c *gin.Context) {
@@ -117,21 +124,26 @@ func MergeFileHandler(c *gin.Context) {
 	if err != nil {
 		fmt.Println("获取文件列表失败", err)
 	}
-	f, err := os.OpenFile(service.UploadDir + fileMD5 + "_" + fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		fmt.Println("生成文件失败:", err)
+	isExit, _ := util.IsExist(service.UploadDir + fileMD5 + "_" + fileName)
+	if isExit {
+		service.UploadFile(userName, fileMD5, fileName, parentPath, fileSize)
+	} else {
+		f, err := os.OpenFile(service.UploadDir+fileMD5+"_"+fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			fmt.Println("生成文件失败:", err)
+		}
+		// 合并区块
+		length := len(fileList)
+		for i := 0; i < length; i++ {
+			data, _ := ioutil.ReadFile(srcDir + "/" + strconv.Itoa(i))
+			f.Write(data)
+		}
+		defer f.Close()
+		if !strings.HasSuffix(parentPath, "/") {
+			parentPath += "/"
+		}
+		service.UploadFile(userName, fileMD5, fileName, parentPath, fileSize)
 	}
-	// 合并区块
-	length := len(fileList)
-	for i := 0; i < length; i++ {
-		data, _ := ioutil.ReadFile(srcDir + "/" + strconv.Itoa(i))
-		f.Write(data)
-	}
-	defer f.Close()
-	if !strings.HasSuffix(parentPath, "/") {
-		parentPath += "/"
-	}
-	service.UploadFile(userName, fileMD5, fileName, parentPath, fileSize)
 	c.JSON(200, gin.H{
 		"status": 0,
 	})
@@ -317,7 +329,6 @@ func RenameFileHandler(c *gin.Context) {
 		data, _ := json.Marshal(message)
 		c.Header("content-type", "text/json")
 		c.Writer.Write(data)
-
 	}
 }
 
