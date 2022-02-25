@@ -82,18 +82,15 @@ func (rm *RegisterMessage)Register(userPwd string)  {
 	if err != nil {
 		status = 1
 	}
-	var table string = `CREATE TABLE ` + rm.UserName + ` (
-		id int NOT NULL AUTO_INCREMENT,
-		parent_path varchar(1024) NOT NULL,
-		file_name varchar(1024) NOT NULL,
-		file_md5 varchar(64) NOT NULL DEFAULT '',
+	var table  = `CREATE TABLE ` + rm.UserName + ` (
+		parent_path varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  		file_name varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+		file_md5 varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
 		file_size bigint DEFAULT '0',
 		category int DEFAULT '0',
 		upload_at datetime DEFAULT CURRENT_TIMESTAMP,
 		change_time datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-		ext1 int DEFAULT 0,
-		ext2 text,
-		PRIMARY KEY (id)
+		PRIMARY KEY (parent_path, file_name) USING BTREE
 	  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci `
 	if status == 0 {
 		// 创建用户文件表
@@ -106,6 +103,19 @@ func (rm *RegisterMessage)Register(userPwd string)  {
 			_, err = stmt.Exec()
 			if err != nil {
 				status = 3
+			}
+			table  = `CREATE TABLE ` + rm.UserName + `_share (
+				parent_path varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+				file_name varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+				share_addr varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
+				FOREIGN KEY(parent_path,file_name) REFERENCES ` + rm.UserName + `(parent_path,file_name) ON UPDATE CASCADE ON DELETE CASCADE,
+				FOREIGN key (share_addr) REFERENCES tbl_share(share_addr) ON UPDATE CASCADE ON DELETE CASCADE, 
+				UNIQUE INDEX id_share_addr (share_addr) USING BTREE
+			) ENGINE = InnoDB AUTO_INCREMENT = 128 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;`
+			stmt, _ = util.DBConn().Prepare(table)
+			_, err = stmt.Exec()
+			if err != nil {
+				status = 4
 			}
 		}
 	}
@@ -126,6 +136,12 @@ func Logout(userName, userToken, status *string) {
 	_, err = stmt.Exec()
 	if err != nil {
 		*status = "2"
+	}
+	sql = "drop table " + *userName + "_share"
+	stmt, _ = util.DBConn().Prepare(sql)
+	_, err = stmt.Exec()
+	if err != nil {
+		*status = "3"
 	}
 }
 

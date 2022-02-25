@@ -2,11 +2,25 @@ package dao
 
 import "database/sql"
 
+type ShareList []ShareFile
+
+type ShareFile struct {
+	FileName string
+	ShareAddr string
+	ShareCode string
+	SignupAt string
+	Days int
+}
+
+type DownloadList struct {
+	FilePath string
+	FileName string
+	FileMD5	 string
+}
+
 // FileMessage : 文件信息
 type FileMessage struct {
-	FileID   int
 	FileName string
-	IsDir    int8
 	Category int8
 	FilePath string
 	FileTime string

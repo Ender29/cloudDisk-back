@@ -2,13 +2,40 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"math/rand"
+	"strings"
+	"time"
 )
 
-func main(){
-	f, err := os.OpenFile("IU(아이유) 'Blueming(블루밍)' 라이브🎤🎤(밴드ver.)  가사  스페셜클립  Special Clip  LYRICS [4K].webm", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		fmt.Println("err:",err)
+func RandString() string {
+	char := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	arr := strings.Split(char, "")
+	length := len(arr)
+	ran := rand.New(rand.NewSource(time.Now().Unix()))
+	randStr := ""
+	for i := 0; i < 15; i++ {
+		randStr = randStr + arr[ran.Intn(length)]
 	}
-	defer f.Close()
+
+	return randStr
+}
+
+// GetDays
+// date2 大于 date1
+// -1 失败
+func GetDays(format, date1, date2 string) int {
+	d1, err := time.ParseInLocation(format, date1, time.Local)
+	if err != nil {
+		fmt.Println(err)
+		return -1
+	}
+	d2, err := time.ParseInLocation(format, date2, time.Local)
+	if err != nil {
+		return -1
+	}
+	return int(d2.Sub(d1).Hours() / 24)
+}
+
+func main() {
+	fmt.Println(GetDays("2006-01-02 15:04:05", "2022-02-23 11:00:34", time.Now().Format("2006-01-02 15:04:05")))
 }

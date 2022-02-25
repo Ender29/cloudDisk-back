@@ -29,8 +29,6 @@ CREATE TABLE `tbl_file`  (
   `file_addr` varchar(1024) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '文件存储位置',
   `create_at` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建日期',
   `update_at` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日期',
-  `status` int NOT NULL DEFAULT 0 COMMENT '状态(可用/禁用/已删除等状态)',
-  `ext1` int NULL DEFAULT 0 COMMENT '备用字段1',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `idx_file_hash`(`file_md5`) USING BTREE,
   INDEX `idx_status`(`status`) USING BTREE
@@ -44,14 +42,8 @@ CREATE TABLE `tbl_user`  (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '用户名',
   `user_pwd` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '用户encoded密码',
-  `email` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT '' COMMENT '邮箱',
-  `phone` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT '' COMMENT '手机号',
-  `email_validated` tinyint(1) NULL DEFAULT 0 COMMENT '邮箱是否已验证',
-  `phone_validated` tinyint(1) NULL DEFAULT 0 COMMENT '手机号是否已验证',
   `signup_at` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册日期',
   `last_active` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后活跃时间戳',
-  `profile` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '用户属性',
-  `status` int NOT NULL DEFAULT 0 COMMENT '账户状态(启用/禁用/锁定/标记删除等)',
   `user_token` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `idx_username`(`user_name`) USING BTREE,
@@ -59,21 +51,44 @@ CREATE TABLE `tbl_user`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 128 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Table structure for tbl_share
+-- ----------------------------
+DROP TABLE IF EXISTS `tbl_share`;
+CREATE TABLE `tbl_share`  (
+  `share_addr` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
+  `share_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '分享人',
+  `signup_at` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '起始时间',
+  `share_code` char(4) NULL DEFAULT '' COMMENT '提取码',
+  `days` int NULL DEFAULT 7 COMMENT '有效天数',
+  PRIMARY KEY (`share_addr`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
 -- Table structure for user
 -- ----------------------------
 DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user`  (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `parent_path` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `parent_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `file_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `file_md5` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
   `file_size` bigint NULL DEFAULT 0,
   `category` int NULL DEFAULT 0,
   `upload_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
   `change_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `ext1` int NULL DEFAULT 0,
-  `ext2` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`parent_path`, `file_name`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+-- Table structure for user_share
+-- ----------------------------
+DROP TABLE IF EXISTS `user_share`;
+CREATE TABLE `user_share`  (
+  `parent_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `file_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `share_addr` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
+  FOREIGN KEY(parent_path,file_name) REFERENCES user(parent_path,file_name) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN key (share_addr) REFERENCES tbl_share(share_addr) ON UPDATE CASCADE ON DELETE CASCADE,
+  UNIQUE INDEX `id_share_addr`(`share_addr`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 128 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;

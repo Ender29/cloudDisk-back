@@ -44,7 +44,7 @@ func GetUser(userName string) *User {
 		// 没有查询到任何一条数据
 		return nil
 	} else if err != nil {
-		fmt.Println("获取唯一表数据失败--", err.Error())
+		fmt.Println("获取数据失败--", err.Error())
 		return nil
 	}
 	return &user
