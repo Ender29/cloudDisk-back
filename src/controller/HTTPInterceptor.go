@@ -28,13 +28,10 @@ func HTTPInterceptor() gin.HandlerFunc {
 		userName := c.Query("userName")
 		token := c.Query("userToken")
 
-		//token := c.Request.Header.Get("token")
-		//fmt.Println(token)
-		//claims, err := util.ParseToken(token)
-		//if err != nil {
-		//	fmt.Println("err:", err)
-		//}
-		//fmt.Println(claims)
+		test := c.Request.Header.Get("token")
+		fmt.Println("token: ", test)
+		//claims, status := util.ParseToken(test)
+
 		// 验证token
 		user := util.GetUser(userName)
 		if c.Request.Method == "OPTIONS" {

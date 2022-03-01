@@ -18,8 +18,7 @@ func GenerateToken(username, password string) (string, error) {
 		username,
 		password,
 		jwt.StandardClaims{
-			NotBefore: int64(time.Now().Unix() - 1000),
-			ExpiresAt: int64(time.Now().Unix() + 3600),
+			ExpiresAt: time.Now().Add(time.Hour * 4).Unix(),
 			Issuer:    "gin-blog",
 		},
 	}
@@ -30,16 +29,27 @@ func GenerateToken(username, password string) (string, error) {
 	return token, err
 }
 
-func ParseToken(token string) (*Claims, error) {
+func ParseToken(token string) (*Claims, int8) {
+	var status int8 = 0
 	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})
 
-	if tokenClaims != nil {
-		if claims, ok := tokenClaims.Claims.(*Claims); ok && tokenClaims.Valid {
-			return claims, nil
+	if err != nil {
+		if ve, ok := err.(*jwt.ValidationError); ok {
+			if ve.Errors&jwt.ValidationErrorExpired != 0 {
+				status = 1
+			} else {
+				status = -1
+			}
 		}
 	}
 
-	return nil, err
+	if tokenClaims != nil {
+		if claims, ok := tokenClaims.Claims.(*Claims); ok && tokenClaims.Valid {
+			return claims, status
+		}
+	}
+
+	return nil, status
 }

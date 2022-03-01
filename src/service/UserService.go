@@ -10,16 +10,16 @@ import (
 type LoginMessage vo.LoginMessage
 type RegisterMessage vo.RegisterMessage
 
-func (lm *LoginMessage)Login(userPwd string)  {
+func (lm *LoginMessage) Login(userPwd string) {
 	token := ""
 	var times string
 	var status int8 = 0
 	var fileSize int64
 	sql := "select sum(file_size) sum from " + lm.UserName
 	rows, err := util.DBConn().Query(sql)
-	if err!=nil {
+	if err != nil {
 		status = 5
-	}else {
+	} else {
 		for rows.Next() {
 			var size int64
 			err := rows.Scan(&size)
@@ -44,9 +44,7 @@ func (lm *LoginMessage)Login(userPwd string)  {
 		if err != nil {
 			status = 2
 		}
-		if userToken == "0" {
-			userToken, _ = util.GenerateToken(lm.UserName, userPwd)
-		}
+		userToken, _ = util.GenerateToken(lm.UserName, userPwd)
 		times = lastime
 		timeNow := time.Now().Format("2006-01-02 15:04:05")
 
@@ -63,7 +61,7 @@ func (lm *LoginMessage)Login(userPwd string)  {
 		}
 		token = userToken
 	}
-	if tmp && status!=5 {
+	if tmp && status != 5 {
 		status = 6
 		fileSize = 0
 	}
@@ -73,7 +71,7 @@ func (lm *LoginMessage)Login(userPwd string)  {
 	lm.LatestTime = times
 }
 
-func (rm *RegisterMessage)Register(userPwd string)  {
+func (rm *RegisterMessage) Register(userPwd string) {
 	var status int8 = 0
 	realPwd, _ := util.EnPwdCode([]byte(userPwd))
 	// 插入用户信息
@@ -82,7 +80,7 @@ func (rm *RegisterMessage)Register(userPwd string)  {
 	if err != nil {
 		status = 1
 	}
-	var table  = `CREATE TABLE ` + rm.UserName + ` (
+	var table = `CREATE TABLE ` + rm.UserName + ` (
 		parent_path varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   		file_name varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
 		file_md5 varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
@@ -104,7 +102,7 @@ func (rm *RegisterMessage)Register(userPwd string)  {
 			if err != nil {
 				status = 3
 			}
-			table  = `CREATE TABLE ` + rm.UserName + `_share (
+			table = `CREATE TABLE ` + rm.UserName + `_share (
 				parent_path varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
 				file_name varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
 				share_addr varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',

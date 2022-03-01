@@ -53,9 +53,9 @@ DROP TABLE IF EXISTS `tbl_share`;
 CREATE TABLE `tbl_share`  (
   `share_addr` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
   `share_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '分享人',
-  `signup_at` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '起始时间',
-  `share_code` char(4) NULL DEFAULT '' COMMENT '提取码',
-  `days` int NULL DEFAULT 7 COMMENT '有效天数',
+  `signup_at` datetime  NULL DEFAULT CURRENT_TIMESTAMP COMMENT '起始时间',
+  `share_code` char(4) NOT NULL DEFAULT '1234' COMMENT '提取码',
+  `days` int NOT NULL DEFAULT 7 COMMENT '有效天数',
   PRIMARY KEY (`share_addr`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
