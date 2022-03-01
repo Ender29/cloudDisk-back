@@ -1,9 +1,8 @@
 package util
 
 import (
+	"github.com/golang-jwt/jwt"
 	"time"
-
-	jwt "github.com/golang-jwt/jwt"
 )
 
 var jwtSecret = []byte("python")
@@ -15,14 +14,12 @@ type Claims struct {
 }
 
 func GenerateToken(username, password string) (string, error) {
-	nowTime := time.Now()
-	expireTime := nowTime.Add(3 * time.Hour)
-
 	claims := Claims{
 		username,
 		password,
 		jwt.StandardClaims{
-			ExpiresAt: expireTime.Unix(),
+			NotBefore: int64(time.Now().Unix() - 1000),
+			ExpiresAt: int64(time.Now().Unix() + 3600),
 			Issuer:    "gin-blog",
 		},
 	}

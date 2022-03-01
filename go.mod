@@ -6,6 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.7.2
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang-jwt/jwt v3.2.1+incompatible
+	github.com/jung-kurt/gofpdf v1.16.2
 )
 
 require (

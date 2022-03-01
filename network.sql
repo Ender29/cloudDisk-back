@@ -22,16 +22,12 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 DROP TABLE IF EXISTS `tbl_file`;
 CREATE TABLE `tbl_file`  (
-  `id` int NOT NULL AUTO_INCREMENT,
   `file_md5` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '文件hash',
   `file_name` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '文件名',
   `file_size` bigint NULL DEFAULT 0 COMMENT '文件大小',
-  `file_addr` varchar(1024) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '文件存储位置',
   `create_at` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建日期',
   `update_at` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日期',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `idx_file_hash`(`file_md5`) USING BTREE,
-  INDEX `idx_status`(`status`) USING BTREE
+  PRIMARY KEY (`file_md5`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 567 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
