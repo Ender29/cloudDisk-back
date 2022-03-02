@@ -11,7 +11,6 @@ type LoginMessage vo.LoginMessage
 type RegisterMessage vo.RegisterMessage
 
 func (lm *LoginMessage) Login(userPwd string) {
-	token := ""
 	var times string
 	var status int8 = 0
 	var fileSize int64
@@ -30,7 +29,7 @@ func (lm *LoginMessage) Login(userPwd string) {
 		}
 	}
 
-	sql = "select user_name, user_pwd, last_active, user_token from tbl_user where user_name=? and user_pwd=?"
+	sql = "select user_name, user_pwd, last_active from tbl_user where user_name=? and user_pwd=?"
 	rows, err = util.DBConn().Query(sql, lm.UserName, userPwd)
 	tmp := true
 	for rows.Next() {
@@ -38,19 +37,17 @@ func (lm *LoginMessage) Login(userPwd string) {
 		var username string
 		var lastime string
 		var userpwd string
-		var userToken string
 		// 获取查询结果
-		err := rows.Scan(&username, &userpwd, &lastime, &userToken)
+		err := rows.Scan(&username, &userpwd, &lastime)
 		if err != nil {
 			status = 2
 		}
-		userToken, _ = util.GenerateToken(lm.UserName, userPwd)
 		times = lastime
 		timeNow := time.Now().Format("2006-01-02 15:04:05")
 
-		sql = "update tbl_user set last_active=?,user_token=? where user_name=?"
+		sql = "update tbl_user set last_active=? where user_name=?"
 		stmt, _ := util.DBConn().Prepare(sql)
-		result, err := stmt.Exec(timeNow, userToken, lm.UserName)
+		result, err := stmt.Exec(timeNow, lm.UserName)
 		if err != nil {
 			status = 3
 		}
@@ -59,13 +56,13 @@ func (lm *LoginMessage) Login(userPwd string) {
 		if affect == 0 {
 			status = 4
 		}
-		token = userToken
 	}
 	if tmp && status != 5 {
 		status = 6
 		fileSize = 0
 	}
-	lm.UserToken = token
+	lm.AccessToken, _ = util.GenerateToken(lm.UserName, userPwd, time.Hour*2)
+	lm.RefreshToken, _ = util.GenerateToken(lm.UserName, userPwd, time.Hour*24)
 	lm.Status = status
 	lm.FileSize = fileSize
 	lm.LatestTime = times

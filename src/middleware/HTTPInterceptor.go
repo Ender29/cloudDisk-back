@@ -1,11 +1,10 @@
-package controller
+package middleware
 
 import (
 	"cloudDisk/src/util"
-	"cloudDisk/src/vo"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"net/http"
+	"time"
 )
 
 // HTTPInterceptor :拦截请求，验证token
@@ -20,37 +19,41 @@ func HTTPInterceptor() gin.HandlerFunc {
 		c.Header("Access-Control-Allow-Credentials", "false")
 		c.Set("content-type", "application/json")
 
-		// err := r.ParseMultipartForm(32 << 20)
-		err := c.Request.ParseMultipartForm(32 << 20)
-		if err != nil {
-			//fmt.Println(err.Error())
-		}
-		userName := c.Query("userName")
-		token := c.Query("userToken")
+		accessToken := c.Request.Header.Get("AccessToken")
 
-		test := c.Request.Header.Get("token")
-		fmt.Println("token: ", test)
-		//claims, status := util.ParseToken(test)
-
-		// 验证token
-		user := util.GetUser(userName)
+		claims, status := util.ParseToken(accessToken)
 		if c.Request.Method == "OPTIONS" {
-			//c.JSON(http.StatusMethodNotAllowed, vo.NewRespMsg(-1, "不行哦~", nil))
-			//c.Abort()
-			c.JSON(http.StatusOK, vo.NewRespMsg(0, "ok", nil))
+			fmt.Println("sadas")
+			c.JSON(200, gin.H{
+				"msg": "ok",
+			})
 			c.Next()
-		} else if user != nil && user.UserToken == token {
+		} else if status == 1 {
+			refreshToken := c.Request.Header.Get("RefreshToken")
+			claims2, status2 := util.ParseToken(refreshToken)
+			if status2 == 0 {
+				newToken, _ := util.GenerateToken(claims2.Username, claims2.Password, time.Second*30)
+				fmt.Println("time out")
+				c.Header("Authorization", newToken)
+				//c.Set("newToken", newToken)
+				c.Set("userName", claims2.Username)
+				c.Next()
+			} else {
+				fmt.Println("登录已过期")
+				c.JSON(200, gin.H{
+					"time": 1,
+					"msg":  "登录已过期",
+				})
+				c.Abort()
+			}
+		} else if status == 0 {
+			fmt.Println("there1")
+			c.Set("userName", claims.Username)
 			c.Next()
-		} else if user == nil {
-			fmt.Println("没有用户")
-			c.JSON(http.StatusMethodNotAllowed, vo.NewRespMsg(-1, "没有用户", nil))
-			c.Abort()
-		} else if user.UserToken != token {
-			fmt.Println("状态无效")
-			c.JSON(http.StatusMethodNotAllowed, vo.NewRespMsg(-1, "状态无效", nil))
-			c.Abort()
 		} else {
-			c.JSON(http.StatusMethodNotAllowed, vo.NewRespMsg(-1, "不可以哦~", nil))
+			fmt.Println("claims: ", claims)
+			fmt.Println("status: ", status)
+			fmt.Println("there2")
 			c.Abort()
 		}
 	}

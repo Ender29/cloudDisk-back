@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"io"
 	"math/rand"
 	"os"
@@ -86,5 +87,26 @@ func Zip(src_dir string, zip_file_name string) {
 }
 
 func main() {
-	Zip("D:\\upload\\ender1646058146162447200", "D:\\upload\\ender1646058146162447200.zip")
+	router := gin.Default()
+	router.Use(func(c *gin.Context) {
+		accessToken := c.Request.Header.Get("AccessToken")
+		fmt.Println(accessToken)
+		if accessToken != "" {
+			c.Set("sad", "sadqwd")
+			c.Next()
+		}
+		c.Abort()
+	})
+	router.GET("/file/filelist", func(c *gin.Context) {
+		fmt.Println("hello")
+		value, bl := c.Get("sad")
+		if bl {
+			value = value.(string)
+			fmt.Println("value: ", value)
+		}
+	})
+	if router.Run(":8080") != nil {
+		fmt.Println("地球爆炸")
+	}
+	fmt.Println("服务监听。。。")
 }

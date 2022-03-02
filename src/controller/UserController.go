@@ -4,7 +4,6 @@ import (
 	"cloudDisk/src/service"
 	"cloudDisk/src/util"
 	"encoding/json"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"time"
 )
@@ -14,7 +13,7 @@ func LoginHandler(c *gin.Context) {
 	userPwd := c.PostForm("userPwd")
 	var message service.LoginMessage
 	message.UserName = userName
-	fmt.Println(userName)
+	//fmt.Println(userName)
 	if userName != "" && userPwd != "" {
 		userPwd, _ = util.EnPwdCode([]byte(userPwd))
 		//message.UserToken, message.LatestTime, message.Status, message.FileSize = service.Login(userName, userPwd)
@@ -49,7 +48,7 @@ func RegisterHandler(c *gin.Context) {
 
 //	LogoutHandler : 注销账户
 func LogoutHandler(c *gin.Context) {
-	userName := c.Query("userName")
+	userName := util.GetName(c)
 	userToken := c.Query("token")
 	status := "0"
 	params := make(map[string]string, 3)
@@ -66,7 +65,7 @@ func LogoutHandler(c *gin.Context) {
 
 // ChangePwdHandler : 修改密码
 func ChangePwdHandler(c *gin.Context) {
-	userName := c.Query("userName")
+	userName := util.GetName(c)
 	userPwd := c.Query("userPwd")
 	newPwd := c.Query("newPwd")
 	status := "0"

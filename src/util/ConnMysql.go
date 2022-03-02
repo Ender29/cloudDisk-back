@@ -3,7 +3,6 @@ package util
 import (
 	"cloudDisk/src/dao"
 	"database/sql"
-	"fmt"
 	"log"
 
 	// mysql srvier
@@ -28,24 +27,23 @@ func DBConn() *sql.DB {
 	return db
 }
 
-func GetUser(userName string) *User {
-	//fmt.Println("GetUser()-->userName:", userName)
-	stmt, err := DBConn().Prepare("select * from tbl_user where user_name = ?")
-	defer stmt.Close()
-	if err != nil {
-		fmt.Println("sql预编译失败")
-		return nil
-	}
-	row := stmt.QueryRow(userName)
-	user := User{}
-	err = row.Scan(&user.ID, &user.UserName, &user.UserPwd, &user.Email, &user.Phone, &user.EmailValidated,
-		&user.PhoneValidated, &user.SignupAt, &user.LastActive, &user.Profile, &user.Status, &user.UserToken)
-	if err == sql.ErrNoRows {
-		// 没有查询到任何一条数据
-		return nil
-	} else if err != nil {
-		fmt.Println("获取数据失败--", err.Error())
-		return nil
-	}
-	return &user
-}
+//func GetUser(userName string) *User {
+//	//fmt.Println("GetUser()-->userName:", userName)
+//	stmt, err := DBConn().Prepare("select * from tbl_user where user_name = ?")
+//	defer stmt.Close()
+//	if err != nil {
+//		fmt.Println("sql预编译失败")
+//		return nil
+//	}
+//	row := stmt.QueryRow(userName)
+//	user := User{}
+//	err = row.Scan(&user.UserName, &user.UserPwd, &user.SignupAt, &user.LastActive)
+//	if err == sql.ErrNoRows {
+//		// 没有查询到任何一条数据
+//		return nil
+//	} else if err != nil {
+//		fmt.Println("获取数据失败--", err.Error())
+//		return nil
+//	}
+//	return &user
+//}

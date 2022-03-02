@@ -186,6 +186,7 @@ func IsDir(userName, fileName, parentPath string) (bool, []byte) {
 // UploadFile : 上传文件
 func UploadFile(userName, fileMD5, fileName, parentPath, fileSize string) int8 {
 	fileSuffix := path.Ext(UploadDir + fileMD5 + "_" + fileName)
+	fileSuffix = strings.ToLower(fileSuffix)
 	var category int8 = 0
 	if fileSuffix == ".wav" || fileSuffix == ".mp3" || fileSuffix == ".au" || fileSuffix == ".aif" || fileSuffix == ".aiff" || fileSuffix == ".ra" || fileSuffix == ".mid" {
 		category = 1

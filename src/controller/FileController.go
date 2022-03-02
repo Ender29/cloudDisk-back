@@ -15,9 +15,8 @@ import (
 	"time"
 )
 
-
 // ShareCloseHandler : 取消分享
-func ShareCloseHandler(c * gin.Context)  {
+func ShareCloseHandler(c *gin.Context) {
 	shareAddr := c.Query("shareAddr")
 	status := service.ShareClose(shareAddr)
 	c.JSON(200, gin.H{
@@ -27,17 +26,17 @@ func ShareCloseHandler(c * gin.Context)  {
 
 // ShareListHandler : 用户分享文件列表
 func ShareListHandler(c *gin.Context) {
-	userName := c.Query("userName")
+	userName := util.GetName(c)
 	status, list := service.GetShareList(userName)
 	c.JSON(200, gin.H{
 		"status": status,
-		"list": list,
+		"list":   list,
 	})
 }
 
 // SearchByCategoryHandler : 查找不同类型文件
 func SearchByCategoryHandler(c *gin.Context) {
-	userName := c.Query("userName")
+	userName := util.GetName(c)
 	category := c.Query("category")
 	files := service.SearchByCategory(userName, category)
 	c.JSON(200, gin.H{
@@ -46,7 +45,7 @@ func SearchByCategoryHandler(c *gin.Context) {
 }
 
 // ShareDownloadHandler : 下载分享文件
-func ShareDownloadHandler(c * gin.Context) {
+func ShareDownloadHandler(c *gin.Context) {
 	shareName := c.Query("shareName")
 	parentPath := c.Query("parentPath")
 	fileName := c.Query("fileName")
@@ -62,9 +61,10 @@ func ShareDownloadHandler(c * gin.Context) {
 	}
 	//fmt.Println(rename)
 	if isDir {
-		c.Header("content-disposition", "attachment; filename="+ rename + ".zip")
+		c.Header("Content-Type", "application/zip")
+		c.Header("content-disposition", "attachment; filename="+rename+".zip")
 	} else {
-		c.Header("content-disposition", "attachment; filename=" + rename)
+		c.Header("content-disposition", "attachment; filename="+rename)
 	}
 	c.Header("Content-Type", "application/octect-stream;")
 	c.Writer.Write(data)
@@ -82,9 +82,15 @@ func ShareFileListHandler(c *gin.Context) {
 	if shareName != "" && parentPath != "" {
 		message = service.FileList(shareName, parentPath)
 	}
-	data, _ := json.Marshal(message)
-	c.Header("content-type", "text/json")
-	c.Writer.Write(data)
+	token := ""
+	newToken, bl := c.Get("netToken")
+	if bl {
+		token = newToken.(string)
+	}
+	c.JSON(200, gin.H{
+		"netToken": token,
+		"list":     message,
+	})
 }
 
 // ShareCheckCodeHandler : 校验提取码
@@ -93,16 +99,16 @@ func ShareCheckCodeHandler(c *gin.Context) {
 	shareCode := c.Query("shareCode")
 	status, shareName, file := service.ShareCheckCode(shareAddr, shareCode)
 	c.JSON(200, gin.H{
-		"status": status,
+		"status":    status,
 		"shareName": shareName,
-		"file": file,
+		"file":      file,
 	})
 }
 
 // ShareCreateURLHandler : 获取分享链接和提取码
 func ShareCreateURLHandler(c *gin.Context) {
 	parentPath := c.Query("parentPath")
-	userName := c.Query("userName")
+	userName := util.GetName(c)
 	fileName := c.Query("fileName")
 	days := c.Query("days")
 	addr, code := service.CreateURL(userName, fileName, parentPath, days)
@@ -123,13 +129,13 @@ func CheckFileHandler(c *gin.Context) {
 	var fileList []string
 	chunks := 0
 	if isFolderExist {
-		tmp, err := util.ListDir(service.UploadDir + fileMd5, fileList)
+		tmp, err := util.ListDir(service.UploadDir+fileMd5, fileList)
 		if err != nil {
 			fmt.Println("获取文件列表失败")
 		}
 		chunks = len(tmp)
 	} else {
-		os.Mkdir(service.UploadDir + fileMd5, 0666)
+		os.Mkdir(service.UploadDir+fileMd5, 0666)
 	}
 	c.JSON(200, gin.H{
 		"status": 0,
@@ -137,10 +143,9 @@ func CheckFileHandler(c *gin.Context) {
 	})
 }
 
-
 // DownloadFileHandler :下载文件
 func DownloadFileHandler(c *gin.Context) {
-	userName := c.Query("userName")
+	userName := util.GetName(c)
 	parentPath := c.Query("parentPath")
 	fileName := c.Query("fileName")
 
@@ -155,15 +160,14 @@ func DownloadFileHandler(c *gin.Context) {
 	}
 	//fmt.Println(rename)
 	if isDir {
-		c.Header("content-disposition", "attachment; filename="+ rename + ".zip")
+		c.Header("content-disposition", "attachment; filename="+rename+".zip")
 	} else {
-		c.Header("content-disposition", "attachment; filename=" + rename)
+		c.Header("content-disposition", "attachment; filename="+rename)
 		//c.Header("content-disposition", "inline")
 	}
 	c.Header("Content-Type", "application/octect-stream;")
 	c.Writer.Write(data)
 }
-
 
 // MergeFileHandler 合并文件
 func MergeFileHandler(c *gin.Context) {
@@ -171,7 +175,7 @@ func MergeFileHandler(c *gin.Context) {
 	fileName := c.Query("fileName")
 	parentPath := c.Query("parentPath")
 	fileSize := c.Query("fileSize")
-	userName := c.Query("userName")
+	userName := util.GetName(c)
 	srcDir := service.UploadDir + fileMD5
 	var fileList []string
 	fileList, err := util.ListDir(srcDir, fileList)
@@ -179,7 +183,7 @@ func MergeFileHandler(c *gin.Context) {
 	if err != nil {
 		fmt.Println("获取文件列表失败", err)
 	}
-	uploadName := service.UploadDir + fileMD5 +"_file" + fileSuffix
+	uploadName := service.UploadDir + fileMD5 + "_file" + fileSuffix
 	isExit, _ := util.IsExist(uploadName)
 	if isExit {
 		service.UploadFile(userName, fileMD5, fileName, parentPath, fileSize)
@@ -205,7 +209,6 @@ func MergeFileHandler(c *gin.Context) {
 	})
 }
 
-
 // UploadFileHandler :处理文件上传
 func UploadFileHandler(c *gin.Context) {
 	c.Request.ParseMultipartForm(32 << 20)
@@ -215,21 +218,20 @@ func UploadFileHandler(c *gin.Context) {
 	fileMD5 := form.Value["fileMD5"][0]
 	uploadFile, _ := file.Open()
 	defer uploadFile.Close()
-	data, _ :=ioutil.ReadAll(uploadFile)
-	err  := ioutil.WriteFile(service.UploadDir + fileMD5 + "/" + current, data, 0666)
+	data, _ := ioutil.ReadAll(uploadFile)
+	err := ioutil.WriteFile(service.UploadDir+fileMD5+"/"+current, data, 0666)
 	if err != nil {
 		fmt.Println("upload: ", err)
 	}
 	c.JSON(200, gin.H{
-			"status": 0,
-			"chunks": current,
-		})
+		"status": 0,
+		"chunks": current,
+	})
 }
-
 
 // CreateFolderHandler : 创建目录
 func CreateFolderHandler(c *gin.Context) {
-	userName := c.Query("userName")
+	userName := util.GetName(c)
 	fileName := c.Query("fileName")
 	//  父路径
 	parentPath := c.Query("parentPath")
@@ -254,7 +256,7 @@ func CreateFolderHandler(c *gin.Context) {
 
 // DeleteFileHandler : 删除文件
 func DeleteFileHandler(c *gin.Context) {
-	userName := c.Query("userName")
+	userName := util.GetName(c)
 	var message dao.FileMessage
 	message.FilePath = c.Query("filePath")
 	message.FileName = c.Query("fileName")
@@ -273,11 +275,11 @@ func RenameFileHandler(c *gin.Context) {
 	message.FilePath = c.Query("filePath")
 	message.FileName = c.Query("oldName")
 	newName := c.Query("newName")
-	userName := c.Query("userName")
+	userName := util.GetName(c)
 	if !strings.HasSuffix(message.FilePath, "/") {
-		message.FilePath  += "/"
+		message.FilePath += "/"
 	}
-	category :=c.Query("category")
+	category := c.Query("category")
 	if message.FileName != "" && userName != "" && newName != "" && category != "" && message.FilePath != "" {
 		temp, _ := strconv.Atoi(category)
 		message.Category = int8(temp)
@@ -297,7 +299,11 @@ func MoveFileHandler(c *gin.Context) {
 	if !strings.HasSuffix(newPath, "/") {
 		newPath += "/"
 	}
-	userName := c.Query("userName")
+	userName := util.GetName(c)
+	name, bl := c.Get("userName")
+	if bl {
+		userName = name.(string)
+	}
 	if !strings.HasSuffix(message.FilePath, "/") {
 		message.FilePath += "/"
 	}
@@ -317,7 +323,9 @@ func MoveFileHandler(c *gin.Context) {
 
 // FileListHandler : 文件列表
 func FileListHandler(c *gin.Context) {
-	userName := c.Query("userName")
+	//fmt.Println("hello")
+	userName := util.GetName(c)
+	fmt.Println("userName:	", userName)
 	path := c.Query("parentPath")
 	if !strings.HasSuffix(path, "/") {
 		path += "/"
@@ -327,8 +335,8 @@ func FileListHandler(c *gin.Context) {
 	if userName != "" && parentPath != "" {
 		message = service.FileList(userName, parentPath)
 	}
-	data, _ := json.Marshal(message)
-	c.Header("content-type", "text/json")
-	c.Writer.Write(data)
+	fmt.Println("list: ", message)
+	c.JSON(200, gin.H{
+		"list": message,
+	})
 }
-

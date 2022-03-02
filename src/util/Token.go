@@ -13,13 +13,13 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-func GenerateToken(username, password string) (string, error) {
+func GenerateToken(username, password string, times time.Duration) (string, error) {
 	claims := Claims{
 		username,
 		password,
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 4).Unix(),
-			Issuer:    "gin-blog",
+			ExpiresAt: time.Now().Add(times).Unix(),
+			Issuer:    "let's go",
 		},
 	}
 
@@ -53,3 +53,18 @@ func ParseToken(token string) (*Claims, int8) {
 
 	return nil, status
 }
+
+// RefreshToken 刷新token
+//func RefreshToken(tokenStr string) (string, error) {
+//	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+//		return jwtSecret, nil
+//	})
+//	if err != nil {
+//		return "", err
+//	}
+//	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+//		claims.StandardClaims.ExpiresAt = time.Now().Add(1 * time.Hour).Unix()
+//		return GenerateToken()
+//	}
+//	return "", TokenInvalid
+//}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"cloudDisk/src/controller"
+	"cloudDisk/src/middleware"
 	"fmt"
 	"github.com/gin-gonic/gin"
 )
@@ -13,7 +14,7 @@ func main() {
 	router.GET("/share/download", controller.ShareDownloadHandler)
 	router.GET("/share/filelist", controller.ShareFileListHandler)
 	router.GET("/share/checkcode", controller.ShareCheckCodeHandler)
-	router.Use(controller.HTTPInterceptor())
+	router.Use(middleware.HTTPInterceptor())
 	//router.POST("/user/logout", controller.LogoutHandler)
 	//router.POST("/user/changepwd", controller.ChangePwdHandler)
 	router.GET("/share/searchbycategory", controller.SearchByCategoryHandler)

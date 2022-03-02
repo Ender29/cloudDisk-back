@@ -35,15 +35,11 @@ CREATE TABLE `tbl_file`  (
 -- ----------------------------
 DROP TABLE IF EXISTS `tbl_user`;
 CREATE TABLE `tbl_user`  (
-  `id` int NOT NULL AUTO_INCREMENT,
   `user_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '用户名',
   `user_pwd` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '用户encoded密码',
   `signup_at` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册日期',
   `last_active` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后活跃时间戳',
-  `user_token` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `idx_username`(`user_name`) USING BTREE,
-  INDEX `idx_status`(`status`) USING BTREE
+  PRIMARY KEY (`user_name`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 128 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
