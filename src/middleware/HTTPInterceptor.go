@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"cloudDisk/src/util"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"time"
 )
@@ -23,7 +22,6 @@ func HTTPInterceptor() gin.HandlerFunc {
 
 		claims, status := util.ParseToken(accessToken)
 		if c.Request.Method == "OPTIONS" {
-			fmt.Println("sadas")
 			c.JSON(200, gin.H{
 				"msg": "ok",
 			})
@@ -33,13 +31,11 @@ func HTTPInterceptor() gin.HandlerFunc {
 			claims2, status2 := util.ParseToken(refreshToken)
 			if status2 == 0 {
 				newToken, _ := util.GenerateToken(claims2.Username, claims2.Password, time.Second*30)
-				fmt.Println("time out")
 				c.Header("Authorization", newToken)
 				//c.Set("newToken", newToken)
 				c.Set("userName", claims2.Username)
 				c.Next()
 			} else {
-				fmt.Println("登录已过期")
 				c.JSON(200, gin.H{
 					"time": 1,
 					"msg":  "登录已过期",
@@ -47,13 +43,9 @@ func HTTPInterceptor() gin.HandlerFunc {
 				c.Abort()
 			}
 		} else if status == 0 {
-			fmt.Println("there1")
 			c.Set("userName", claims.Username)
 			c.Next()
 		} else {
-			fmt.Println("claims: ", claims)
-			fmt.Println("status: ", status)
-			fmt.Println("there2")
 			c.Abort()
 		}
 	}

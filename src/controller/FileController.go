@@ -54,7 +54,7 @@ func ShareDownloadHandler(c *gin.Context) {
 		parentPath += "/"
 	}
 	//service.IsDir(userName, fileName, parentPath)
-	isDir, data := service.IsDir(shareName, fileName, parentPath)
+	isDir, data := service.DownloadService(shareName, fileName, parentPath)
 	var rename string
 	for _, char := range fileName {
 		rename += "\\u" + fmt.Sprintf("%04x", char)
@@ -153,7 +153,7 @@ func DownloadFileHandler(c *gin.Context) {
 		parentPath += "/"
 	}
 	//service.IsDir(userName, fileName, parentPath)
-	isDir, data := service.IsDir(userName, fileName, parentPath)
+	isDir, data := service.DownloadService(userName, fileName, parentPath)
 	var rename string
 	for _, char := range fileName {
 		rename += "\\u" + fmt.Sprintf("%04x", char)
@@ -213,6 +213,7 @@ func MergeFileHandler(c *gin.Context) {
 func UploadFileHandler(c *gin.Context) {
 	c.Request.ParseMultipartForm(32 << 20)
 	form, _ := c.MultipartForm()
+	fmt.Println(form.File)
 	file := form.File["data"][0]
 	current := form.Value["current"][0]
 	fileMD5 := form.Value["fileMD5"][0]

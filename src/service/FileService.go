@@ -126,7 +126,7 @@ func CreateURL(userName, fileName, parentPath, days string) (string, string) {
 }
 
 // IsDir : 判断是否是文件夹
-func IsDir(userName, fileName, parentPath string) (bool, []byte) {
+func DownloadService(userName, fileName, parentPath string) (bool, []byte) {
 	sql := "select category,file_md5 from " + userName + " where file_name='" + fileName + "' and parent_path='" + parentPath + "' limit 1"
 	//fmt.Println(sql)
 	// warning: 没查到也可能是0
@@ -198,7 +198,7 @@ func UploadFile(userName, fileMD5, fileName, parentPath, fileSize string) int8 {
 		category = 4
 	}
 	// warning:文件名带单引号
-	sql := "insert into tbl_file (file_md5,file_name,file_size) values('" + fileMD5 + "','" + fileName + "','" + fileSize + "')"
+	sql := "insert into tbl_file (file_md5,file_name,file_size) values('" + fileMD5 + "',\"" + fileName + "\",'" + fileSize + "')"
 	//fmt.Println(sql)
 	stmt, err := util.DBConn().Prepare(sql)
 	if err != nil {
