@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/casbin/casbin/v2 v2.41.1
 	github.com/casbin/xorm-adapter/v2 v2.5.1
+	github.com/garyburd/redigo v1.6.3
 	github.com/gin-gonic/gin v1.7.2
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang-jwt/jwt v3.2.1+incompatible

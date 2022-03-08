@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"cloudDisk/src/util"
+	"fmt"
+	"github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
 	"time"
 )
@@ -19,7 +21,6 @@ func HTTPInterceptor() gin.HandlerFunc {
 		c.Set("content-type", "application/json")
 
 		accessToken := c.Request.Header.Get("AccessToken")
-
 		claims, status := util.ParseToken(accessToken)
 		if c.Request.Method == "OPTIONS" {
 			c.JSON(200, gin.H{
@@ -27,21 +28,26 @@ func HTTPInterceptor() gin.HandlerFunc {
 			})
 			c.Next()
 		} else if status == 1 {
-			refreshToken := c.Request.Header.Get("RefreshToken")
+			//refreshToken := c.Request.Header.Get("RefreshToken")
+			conn := util.Pool.Get()
+			defer conn.Close()
+			refreshToken, _ := redis.String(conn.Do("get", accessToken))
+			fmt.Println("refresh token:", refreshToken)
 			claims2, status2 := util.ParseToken(refreshToken)
 			if status2 == 0 {
-				newToken, _ := util.GenerateToken(claims2.Username, claims2.Password, time.Second*30)
+				newToken, _ := util.GenerateToken(claims2.Username, claims2.Password, time.Minute*5)
+				conn.Do("set", newToken, refreshToken, "EX", 3600*24)
 				c.Header("Authorization", newToken)
-				//c.Set("newToken", newToken)
 				c.Set("userName", claims2.Username)
 				c.Next()
 			} else {
 				c.JSON(200, gin.H{
-					"time": 1,
-					"msg":  "登录已过期",
+					"timeout": 1,
+					"msg":     "登录已过期",
 				})
 				c.Abort()
 			}
+			conn.Do("del", accessToken)
 		} else if status == 0 {
 			c.Set("userName", claims.Username)
 			c.Next()

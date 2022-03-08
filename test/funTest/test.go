@@ -2,8 +2,8 @@ package main
 
 import (
 	"archive/zip"
+	"cloudDisk/src/util"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"math/rand"
 	"os"
@@ -87,26 +87,9 @@ func Zip(src_dir string, zip_file_name string) {
 }
 
 func main() {
-	router := gin.Default()
-	router.Use(func(c *gin.Context) {
-		accessToken := c.Request.Header.Get("AccessToken")
-		fmt.Println(accessToken)
-		if accessToken != "" {
-			c.Set("sad", "sadqwd")
-			c.Next()
-		}
-		c.Abort()
-	})
-	router.GET("/file/filelist", func(c *gin.Context) {
-		fmt.Println("hello")
-		value, bl := c.Get("sad")
-		if bl {
-			value = value.(string)
-			fmt.Println("value: ", value)
-		}
-	})
-	if router.Run(":8080") != nil {
-		fmt.Println("地球爆炸")
-	}
-	fmt.Println("服务监听。。。")
+	token, _ := util.GenerateToken("ender", "123", time.Hour)
+	fmt.Println(token)
+	time.Sleep(5000)
+	token2, _ := util.GenerateToken("ender", "123", time.Hour)
+	fmt.Println(token2)
 }

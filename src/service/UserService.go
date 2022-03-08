@@ -61,8 +61,12 @@ func (lm *LoginMessage) Login(userPwd string) {
 		status = 6
 		fileSize = 0
 	}
-	lm.AccessToken, _ = util.GenerateToken(lm.UserName, userPwd, time.Hour*2)
-	lm.RefreshToken, _ = util.GenerateToken(lm.UserName, userPwd, time.Hour*24)
+	lm.AccessToken, _ = util.GenerateToken(lm.UserName, userPwd, time.Minute*5)
+	conn := util.Pool.Get()
+	defer conn.Close()
+	// redis 绑定token,设置过期时间
+	refreshToken, _ := util.GenerateToken(lm.UserName, userPwd, time.Hour*24)
+	conn.Do("set", lm.AccessToken, refreshToken, "EX", 3600*24)
 	lm.Status = status
 	lm.FileSize = fileSize
 	lm.LatestTime = times

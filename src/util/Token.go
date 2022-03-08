@@ -10,6 +10,7 @@ var jwtSecret = []byte("python")
 type Claims struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	//CurrentTime int64
 	jwt.StandardClaims
 }
 
@@ -17,6 +18,7 @@ func GenerateToken(username, password string, times time.Duration) (string, erro
 	claims := Claims{
 		username,
 		password,
+		//time.Now().UnixNano(),
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(times).Unix(),
 			Issuer:    "let's go",
