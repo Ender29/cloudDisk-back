@@ -9,27 +9,34 @@ import (
 
 func main() {
 	router := gin.Default()
-	router.POST("/user/login", controller.LoginHandler)
-	router.POST("/user/register", controller.RegisterHandler)
-	router.GET("/share/download", controller.ShareDownloadHandler)
-	router.GET("/share/filelist", controller.ShareFileListHandler)
-	router.GET("/share/checkcode", controller.ShareCheckCodeHandler)
-	router.Use(middleware.HTTPInterceptor())
-	//router.POST("/user/logout", controller.LogoutHandler)
-	//router.POST("/user/changepwd", controller.ChangePwdHandler)
-	router.GET("/share/searchbycategory", controller.SearchByCategoryHandler)
-	router.GET("/share/createurl", controller.ShareCreateURLHandler)
-	router.GET("/file/closeshare", controller.ShareCloseHandler)
-	router.GET("/file/createfolder", controller.CreateFolderHandler)
-	router.GET("/file/deletefile", controller.DeleteFileHandler)
-	router.GET("/file/renamefile", controller.RenameFileHandler)
-	router.GET("/file/movefile", controller.MoveFileHandler)
-	router.GET("/file/filelist", controller.FileListHandler)
-	router.GET("/file/sharelist", controller.ShareListHandler)
-	router.GET("/file/check", controller.CheckFileHandler)
-	router.POST("/file/upload", controller.UploadFileHandler)
-	router.GET("/file/merge", controller.MergeFileHandler)
-	router.GET("/file/download", controller.DownloadFileHandler)
+	root := router.Group("/")
+	{
+		root.POST("/login", controller.LoginHandler)
+		root.POST("/register", controller.RegisterHandler)
+		share := root.Group("/share")
+		{
+			share.GET("/download", controller.ShareDownloadHandler)
+			share.GET("/filelist", controller.ShareFileListHandler)
+			share.GET("/checkcode", controller.ShareCheckCodeHandler)
+		}
+	}
+	file := root.Group("/file")
+	file.Use(middleware.HTTPInterceptor())
+	{
+		file.GET("/closeshare", controller.ShareCloseHandler)
+		file.GET("/createurl", controller.ShareCreateURLHandler)
+		file.GET("/createfolder", controller.CreateFolderHandler)
+		file.GET("/deletefile", controller.DeleteFileHandler)
+		file.GET("/renamefile", controller.RenameFileHandler)
+		file.GET("/movefile", controller.MoveFileHandler)
+		file.GET("/searchbycategory", controller.SearchByCategoryHandler)
+		file.GET("/filelist", controller.FileListHandler)
+		file.GET("/sharelist", controller.ShareListHandler)
+		file.GET("/check", controller.CheckFileHandler)
+		file.POST("/upload", controller.UploadFileHandler)
+		file.GET("/merge", controller.MergeFileHandler)
+		file.GET("/download", controller.DownloadFileHandler)
+	}
 	if router.Run(":8080") != nil {
 		fmt.Println("地球爆炸")
 	}

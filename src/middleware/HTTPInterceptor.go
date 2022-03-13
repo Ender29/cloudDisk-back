@@ -22,6 +22,7 @@ func HTTPInterceptor() gin.HandlerFunc {
 
 		accessToken := c.Request.Header.Get("AccessToken")
 		claims, status := util.ParseToken(accessToken)
+		fmt.Println("status:", status)
 		if c.Request.Method == "OPTIONS" {
 			c.JSON(200, gin.H{
 				"msg": "ok",
@@ -34,7 +35,7 @@ func HTTPInterceptor() gin.HandlerFunc {
 			refreshToken, _ := redis.String(conn.Do("get", accessToken))
 			fmt.Println("refresh token:", refreshToken)
 			claims2, status2 := util.ParseToken(refreshToken)
-			if status2 == 0 {
+			if status2 == 0 && refreshToken != "" {
 				newToken, _ := util.GenerateToken(claims2.Username, claims2.Password, time.Minute*5)
 				conn.Do("set", newToken, refreshToken, "EX", 3600*24)
 				c.Header("Authorization", newToken)

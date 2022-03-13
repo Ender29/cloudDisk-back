@@ -2,7 +2,7 @@ package main
 
 import (
 	"archive/zip"
-	"cloudDisk/src/util"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"math/rand"
@@ -87,9 +87,8 @@ func Zip(src_dir string, zip_file_name string) {
 }
 
 func main() {
-	token, _ := util.GenerateToken("ender", "123", time.Hour)
-	fmt.Println(token)
-	time.Sleep(5000)
-	token2, _ := util.GenerateToken("ender", "123", time.Hour)
-	fmt.Println(token2)
+
+	decoded, err := base64.StdEncoding.DecodeString("\u0003JC^�Z��\"�oBW��V�vCd��\u001C��ˆ�Ȼ�[�KPrq(�YNRA�.w�5�]SH~���\"c�@�0�\u001A\f�\u0017���Ҟ�� U\u001C����^�;۬\n�źO�\u0011�\\�MP�6�6jD��@�{�37\u0018�X\u0011/�z��!�>\u000F\\���\u0012�@�l�x��N)\u0012]��%��������5'T��\u0013d\u0010�|��\u001Dt�.M[\u001D[rH9\u0013�\u001A�\u001B��\u0014�Xj �Άz��d�L�������|���(\u0012�s�\u0017��")
+	decodestr := string(decoded)
+	fmt.Println(decodestr, err)
 }

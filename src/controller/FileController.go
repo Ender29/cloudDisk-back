@@ -109,6 +109,7 @@ func ShareCheckCodeHandler(c *gin.Context) {
 func ShareCreateURLHandler(c *gin.Context) {
 	parentPath := c.Query("parentPath")
 	userName := util.GetName(c)
+	fmt.Println("share name:", userName)
 	fileName := c.Query("fileName")
 	days := c.Query("days")
 	addr, code := service.CreateURL(userName, fileName, parentPath, days)
@@ -326,7 +327,6 @@ func MoveFileHandler(c *gin.Context) {
 func FileListHandler(c *gin.Context) {
 	//fmt.Println("hello")
 	userName := util.GetName(c)
-	fmt.Println("userName:	", userName)
 	path := c.Query("parentPath")
 	if !strings.HasSuffix(path, "/") {
 		path += "/"
@@ -336,7 +336,6 @@ func FileListHandler(c *gin.Context) {
 	if userName != "" && parentPath != "" {
 		message = service.FileList(userName, parentPath)
 	}
-	fmt.Println("list: ", message)
 	c.JSON(200, gin.H{
 		"list": message,
 	})

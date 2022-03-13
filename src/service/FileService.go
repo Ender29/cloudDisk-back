@@ -115,9 +115,11 @@ func CreateURL(userName, fileName, parentPath, days string) (string, string) {
 			_, err := stmt.Exec()
 			if err == nil {
 				sql = "insert into " + userName + "_share (parent_path,file_name,share_addr) values('" + parentPath + "','" + fileName + "','" + addr + "')"
+				fmt.Println(sql)
 				util.DBConn().Exec(sql)
 				break // 插入成功就中断循环
 			}
+			fmt.Println("err:", err)
 		}
 	}
 
