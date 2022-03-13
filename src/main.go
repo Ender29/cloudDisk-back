@@ -21,7 +21,7 @@ func main() {
 		}
 	}
 	file := root.Group("/file")
-	file.Use(middleware.HTTPInterceptor())
+	file.Use(middleware.HTTPInterceptor(), middleware.Privilege())
 	{
 		file.GET("/closeshare", controller.ShareCloseHandler)
 		file.GET("/createurl", controller.ShareCreateURLHandler)

@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"cloudDisk/src/util"
-	"fmt"
+	"cloudDisk/src/util/db"
 	"github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
 	"time"
@@ -22,18 +22,18 @@ func HTTPInterceptor() gin.HandlerFunc {
 
 		accessToken := c.Request.Header.Get("AccessToken")
 		claims, status := util.ParseToken(accessToken)
-		fmt.Println("status:", status)
+		//fmt.Println("status:", status)
 		if c.Request.Method == "OPTIONS" {
 			c.JSON(200, gin.H{
 				"msg": "ok",
 			})
-			c.Next()
+			return
 		} else if status == 1 {
 			//refreshToken := c.Request.Header.Get("RefreshToken")
-			conn := util.Pool.Get()
+			conn := db.Pool.Get()
 			defer conn.Close()
 			refreshToken, _ := redis.String(conn.Do("get", accessToken))
-			fmt.Println("refresh token:", refreshToken)
+			//fmt.Println("refresh token:", refreshToken)
 			claims2, status2 := util.ParseToken(refreshToken)
 			if status2 == 0 && refreshToken != "" {
 				newToken, _ := util.GenerateToken(claims2.Username, claims2.Password, time.Minute*5)

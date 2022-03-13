@@ -2,6 +2,7 @@ package service
 
 import (
 	util "cloudDisk/src/util"
+	"cloudDisk/src/util/db"
 	"cloudDisk/src/vo"
 	"log"
 	"time"
@@ -15,7 +16,7 @@ func (lm *LoginMessage) Login(userPwd string) {
 	var status int8 = 0
 	var fileSize int64
 	sql := "select sum(file_size) sum from " + lm.UserName
-	rows, err := util.DBConn().Query(sql)
+	rows, err := db.DBConn().Query(sql)
 	if err != nil {
 		status = 5
 	} else {
@@ -30,7 +31,7 @@ func (lm *LoginMessage) Login(userPwd string) {
 	}
 
 	sql = "select user_name, user_pwd, last_active from tbl_user where user_name=? and user_pwd=?"
-	rows, err = util.DBConn().Query(sql, lm.UserName, userPwd)
+	rows, err = db.DBConn().Query(sql, lm.UserName, userPwd)
 	tmp := true
 	for rows.Next() {
 		tmp = false
@@ -46,7 +47,7 @@ func (lm *LoginMessage) Login(userPwd string) {
 		timeNow := time.Now().Format("2006-01-02 15:04:05")
 
 		sql = "update tbl_user set last_active=? where user_name=?"
-		stmt, _ := util.DBConn().Prepare(sql)
+		stmt, _ := db.DBConn().Prepare(sql)
 		result, err := stmt.Exec(timeNow, lm.UserName)
 		if err != nil {
 			status = 3
@@ -62,7 +63,7 @@ func (lm *LoginMessage) Login(userPwd string) {
 		fileSize = 0
 	}
 	lm.AccessToken, _ = util.GenerateToken(lm.UserName, userPwd, time.Minute*5)
-	conn := util.Pool.Get()
+	conn := db.Pool.Get()
 	defer conn.Close()
 	// redis 绑定token,设置过期时间
 	refreshToken, _ := util.GenerateToken(lm.UserName, userPwd, time.Hour*24)
@@ -76,7 +77,7 @@ func (rm *RegisterMessage) Register(userPwd string) {
 	var status int8 = 0
 	realPwd, _ := util.EnPwdCode([]byte(userPwd))
 	// 插入用户信息
-	stmt, err := util.DBConn().Prepare("INSERT tbl_user set user_name=?,user_pwd=?")
+	stmt, err := db.DBConn().Prepare("INSERT tbl_user set user_name=?,user_pwd=?")
 	_, err = stmt.Exec(rm.UserName, realPwd)
 	if err != nil {
 		status = 1
@@ -93,9 +94,9 @@ func (rm *RegisterMessage) Register(userPwd string) {
 	  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci `
 	if status == 0 {
 		// 创建用户文件表
-		stmt, err := util.DBConn().Prepare(table)
+		stmt, err := db.DBConn().Prepare(table)
 		if err != nil {
-			util.DBConn().Prepare("delete from tbl_user where user_name=?")
+			db.DBConn().Prepare("delete from tbl_user where user_name=?")
 			_, _ = stmt.Exec(rm.UserName)
 			status = 2
 		} else {
@@ -111,7 +112,7 @@ func (rm *RegisterMessage) Register(userPwd string) {
 				FOREIGN key (share_addr) REFERENCES tbl_share(share_addr) ON UPDATE CASCADE ON DELETE CASCADE, 
 				UNIQUE INDEX id_share_addr (share_addr) USING BTREE
 			) ENGINE = InnoDB AUTO_INCREMENT = 128 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;`
-			stmt, _ = util.DBConn().Prepare(table)
+			stmt, _ = db.DBConn().Prepare(table)
 			_, err = stmt.Exec()
 			if err != nil {
 				status = 4
@@ -125,19 +126,19 @@ func (rm *RegisterMessage) Register(userPwd string) {
 // Logout : 注销账户
 func Logout(userName, userToken, status *string) {
 	sql := "delete from tbl_user where user_name=? and user_token=?"
-	stmt, _ := util.DBConn().Prepare(sql)
+	stmt, _ := db.DBConn().Prepare(sql)
 	_, err := stmt.Exec(userName, userToken)
 	if err != nil {
 		*status = "1"
 	}
 	sql = "drop table " + *userName
-	stmt, _ = util.DBConn().Prepare(sql)
+	stmt, _ = db.DBConn().Prepare(sql)
 	_, err = stmt.Exec()
 	if err != nil {
 		*status = "2"
 	}
 	sql = "drop table " + *userName + "_share"
-	stmt, _ = util.DBConn().Prepare(sql)
+	stmt, _ = db.DBConn().Prepare(sql)
 	_, err = stmt.Exec()
 	if err != nil {
 		*status = "3"
@@ -147,7 +148,7 @@ func Logout(userName, userToken, status *string) {
 // ChangePwd : 修改密码
 func ChangePwd(userName, userPwd, newPwd string) string {
 	sql := "update tbl_user set user_pwd=?,user_token='0' where user_name=? and user_pwd=?;"
-	stmt, _ := util.DBConn().Prepare(sql)
+	stmt, _ := db.DBConn().Prepare(sql)
 	_, err := stmt.Exec(newPwd, userName, userPwd)
 	if err != nil {
 		log.Fatalln(err)

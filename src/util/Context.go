@@ -9,3 +9,7 @@ func GetName(c *gin.Context) string {
 	}
 	return ""
 }
+
+func GetOA(c *gin.Context) (string, string) {
+	return c.Request.URL.Path, c.Request.Method
+}

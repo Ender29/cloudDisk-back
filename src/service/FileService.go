@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"cloudDisk/src/dao"
 	util "cloudDisk/src/util"
+	"cloudDisk/src/util/db"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -23,7 +24,7 @@ const UploadDir = "D:/upload/"
 func ShareClose(shareAddr string) int {
 	sql := "delete from tbl_share where share_addr='" + shareAddr + "'"
 	//fmt.Println(sql)
-	_, err := util.DBConn().Exec(sql)
+	_, err := db.DBConn().Exec(sql)
 	if err != nil {
 		return -1
 	}
@@ -34,7 +35,7 @@ func ShareClose(shareAddr string) int {
 func GetShareList(userName string) (int8, dao.ShareList) {
 	sql := "select a.share_addr,a.share_code,a.signup_at,(a.days-DATEDIFF(now(),a.signup_at)),b.file_name from tbl_share as a inner join " + userName + "_share as b;"
 	var list dao.ShareList
-	rows, err := util.DBConn().Query(sql)
+	rows, err := db.DBConn().Query(sql)
 	if err != nil {
 		return 1, list
 	}
@@ -55,7 +56,7 @@ func GetShareList(userName string) (int8, dao.ShareList) {
 // SearchByCategory : 通过类型查找文件
 func SearchByCategory(userName, category string) []dao.FileMessage {
 	sql := "select parent_path,file_name,category,change_time,file_size from " + userName + " where category='" + category + "'"
-	rows, _ := util.DBConn().Query(sql)
+	rows, _ := db.DBConn().Query(sql)
 	var list []dao.FileMessage
 	for rows.Next() {
 		var file dao.FileMessage
@@ -72,7 +73,7 @@ func SearchByCategory(userName, category string) []dao.FileMessage {
 // ShareCheckCode : 检查分享地址和分享码
 func ShareCheckCode(shareAddr, shareCode string) (int8, string, dao.FileMessage) {
 	sql := "delete from tbl_share where share_addr='" + shareAddr + "' and days<=DATEDIFF(now(),signup_at)"
-	res, _ := util.DBConn().Exec(sql)
+	res, _ := db.DBConn().Exec(sql)
 	eff, _ := res.RowsAffected()
 	var file dao.FileMessage
 	if eff > 0 {
@@ -81,7 +82,7 @@ func ShareCheckCode(shareAddr, shareCode string) (int8, string, dao.FileMessage)
 	sql = "select share_code,share_name from tbl_share where share_addr='" + shareAddr + "'"
 	code := ""
 	shareName := ""
-	row := util.DBConn().QueryRow(sql)
+	row := db.DBConn().QueryRow(sql)
 	row.Scan(&code, &shareName)
 	if len(code) < 1 {
 		return 2, "", file
@@ -90,7 +91,7 @@ func ShareCheckCode(shareAddr, shareCode string) (int8, string, dao.FileMessage)
 		return 3, "", file
 	}
 	sql = "select parent_path,file_name,category,change_time,file_size from " + shareName + " where (parent_path,file_name) in (select parent_path,file_name from " + shareName + "_share where share_addr='" + shareAddr + "')"
-	row = util.DBConn().QueryRow(sql)
+	row = db.DBConn().QueryRow(sql)
 
 	row.Scan(&file.FilePath, &file.FileName, &file.Category, &file.FileTime, &file.FileSize)
 
@@ -102,7 +103,7 @@ func CreateURL(userName, fileName, parentPath, days string) (string, string) {
 
 	sql := "select share_addr from " + userName + "_share where parent_path='" + parentPath + "' and file_name='" + fileName + "'"
 	var findAddr = ""
-	row := util.DBConn().QueryRow(sql)
+	row := db.DBConn().QueryRow(sql)
 	row.Scan(&findAddr)
 	addr := ""
 	code := ""
@@ -111,12 +112,12 @@ func CreateURL(userName, fileName, parentPath, days string) (string, string) {
 			addr = util.GetRandStr(15)
 			code = util.GetRandStr(4)
 			sql = "insert into tbl_share (share_addr,share_name,share_code,days) values('" + addr + "','" + userName + "','" + code + "','" + days + "')"
-			stmt, _ := util.DBConn().Prepare(sql)
+			stmt, _ := db.DBConn().Prepare(sql)
 			_, err := stmt.Exec()
 			if err == nil {
 				sql = "insert into " + userName + "_share (parent_path,file_name,share_addr) values('" + parentPath + "','" + fileName + "','" + addr + "')"
 				fmt.Println(sql)
-				util.DBConn().Exec(sql)
+				db.DBConn().Exec(sql)
 				break // 插入成功就中断循环
 			}
 			fmt.Println("err:", err)
@@ -132,7 +133,7 @@ func DownloadService(userName, fileName, parentPath string) (bool, []byte) {
 	sql := "select category,file_md5 from " + userName + " where file_name='" + fileName + "' and parent_path='" + parentPath + "' limit 1"
 	//fmt.Println(sql)
 	// warning: 没查到也可能是0
-	row := util.DBConn().QueryRow(sql)
+	row := db.DBConn().QueryRow(sql)
 	var category int
 	var fileMD5 string
 	row.Scan(&category, &fileMD5)
@@ -144,7 +145,7 @@ func DownloadService(userName, fileName, parentPath string) (bool, []byte) {
 		pathLen := len(parPath)
 		sql = "SELECT parent_path,file_name,file_md5 FROM " + userName + " where MID(parent_path,1," + strconv.Itoa(pathLen) + ")='" + parPath + "' AND category!='5'"
 		//fmt.Println(sql)
-		rows, _ := util.DBConn().Query(sql)
+		rows, _ := db.DBConn().Query(sql)
 		var list []dao.DownloadList
 		for rows.Next() {
 			var file_name string
@@ -202,7 +203,7 @@ func UploadFile(userName, fileMD5, fileName, parentPath, fileSize string) int8 {
 	// warning:文件名带单引号
 	sql := "insert into tbl_file (file_md5,file_name,file_size) values('" + fileMD5 + "',\"" + fileName + "\",'" + fileSize + "')"
 	//fmt.Println(sql)
-	stmt, err := util.DBConn().Prepare(sql)
+	stmt, err := db.DBConn().Prepare(sql)
 	if err != nil {
 		fmt.Println("UploadFile insert tbl_file:", err)
 	}
@@ -227,7 +228,7 @@ func UploadFile(userName, fileMD5, fileName, parentPath, fileSize string) int8 {
 	}
 	sql = "INSERT INTO " + userName + " (parent_path,file_name,category,file_size,file_md5) values('" + parentPath + "','" + fileName + "','" + strconv.Itoa(int(category)) + "','" + fileSize + "','" + fileMD5 + "')"
 	fmt.Println(sql)
-	stmt, _ = util.DBConn().Prepare(sql)
+	stmt, _ = db.DBConn().Prepare(sql)
 	_, err = stmt.Exec()
 	if err != nil {
 		return 2
@@ -240,7 +241,7 @@ func CreateCatalog(userName, fileName, theTime, path string) int8 {
 	var status int8 = 0
 	sql := "INSERT INTO " + userName + "(parent_path,file_name,category,upload_at,change_time) VALUES ('" + path + "','" + fileName + "','5','" + theTime + "','" + theTime + "')"
 	fmt.Println(sql)
-	stmt, _ := util.DBConn().Prepare(sql)
+	stmt, _ := db.DBConn().Prepare(sql)
 	_, err := stmt.Exec()
 	if err != nil {
 		fmt.Println(err)
@@ -252,7 +253,7 @@ func CreateCatalog(userName, fileName, theTime, path string) int8 {
 // DeleteFile : 删除文件
 func DeleteFile(message *dao.FileMessage, userName string) {
 	sql := "select parent_path, file_name, file_size, category from " + userName + " where parent_path=? and file_name=?"
-	rows, err := util.DBConn().Query(sql, message.FilePath, message.FileName)
+	rows, err := db.DBConn().Query(sql, message.FilePath, message.FileName)
 	if err != nil {
 		message.Status = 1
 	}
@@ -266,9 +267,9 @@ func DeleteFile(message *dao.FileMessage, userName string) {
 	if message.Status == 0 {
 		sql = "delete from tbl_share where share_addr=(select share_addr from " + userName + "_share where parent_path='" + message.FilePath + "' and file_name='" + message.FileName + "')"
 		fmt.Println(sql)
-		util.DBConn().Exec(sql)
+		db.DBConn().Exec(sql)
 		sql = "delete from " + userName + " where parent_path=? and file_name=?"
-		stmt, _ := util.DBConn().Prepare(sql)
+		stmt, _ := db.DBConn().Prepare(sql)
 		_, err = stmt.Exec(message.FilePath, message.FileName)
 		if err != nil {
 			message.Status = 3
@@ -282,9 +283,9 @@ func DeleteFile(message *dao.FileMessage, userName string) {
 			// 先删了分享表中的
 			sql = "delete from tbl_share where share_addr=(select share_addr from " + userName + "_share where mid(parent_path, 1, " + length + ")='" + str + "')"
 			fmt.Println(sql)
-			util.DBConn().Exec(sql)
+			db.DBConn().Exec(sql)
 			sql = "delete from " + userName + " where mid(parent_path, 1, " + length + ")='" + str + "'"
-			stmt, _ = util.DBConn().Prepare(sql)
+			stmt, _ = db.DBConn().Prepare(sql)
 			_, err = stmt.Exec()
 			if err != nil {
 				message.Status = 4
@@ -296,7 +297,7 @@ func DeleteFile(message *dao.FileMessage, userName string) {
 // RenameFile : 文件重命名
 func RenameFile(userName string, message *dao.FileMessage, newName string) {
 	sql := "update " + userName + " set file_name=? where parent_path=? and file_name=?"
-	stmt, _ := util.DBConn().Prepare(sql)
+	stmt, _ := db.DBConn().Prepare(sql)
 	_, err := stmt.Exec(newName, message.FilePath, message.FileName)
 	if err != nil {
 		message.Status = 1
@@ -307,7 +308,7 @@ func RenameFile(userName string, message *dao.FileMessage, newName string) {
 		midLen := strconv.Itoa(utf8.RuneCountInString(message.FileName) + utf8.RuneCountInString(message.FilePath) + 1)
 		sql = "update " + userName + " set parent_path=insert(parent_path, " + insertStart + ", " + insertLen + ",'" + newName + "') where mid(parent_path, 1, " + midLen + ")='" + message.FilePath + message.FileName + "/'"
 		fmt.Println(sql)
-		_, err = util.DBConn().Exec(sql)
+		_, err = db.DBConn().Exec(sql)
 		if err != nil {
 			message.Status = 2
 		}
@@ -321,7 +322,7 @@ func RenameFile(userName string, message *dao.FileMessage, newName string) {
 func MoveFile(userName string, message *dao.FileMessage, newPath string) {
 	sql := "update " + userName + " set parent_path=? where parent_path=? and file_name=?"
 	fmt.Println(sql)
-	stmt, _ := util.DBConn().Prepare(sql)
+	stmt, _ := db.DBConn().Prepare(sql)
 	_, err := stmt.Exec(newPath, message.FilePath, message.FileName)
 	if err != nil {
 		message.Status = 1
@@ -333,7 +334,7 @@ func MoveFile(userName string, message *dao.FileMessage, newPath string) {
 		// slen := strconv.Itoa(len(sPath))
 		sql = "update " + userName + " set parent_path=insert(parent_path, 1, " + flen + ", '" + sPath + "') where mid(parent_path, 1, " + flen + ")='" + fPath + "'"
 		fmt.Println(sql)
-		stmt, _ = util.DBConn().Prepare(sql)
+		stmt, _ = db.DBConn().Prepare(sql)
 		_, err = stmt.Exec()
 		if err != nil {
 			log.Fatalln(err)
@@ -347,7 +348,7 @@ func MoveFile(userName string, message *dao.FileMessage, newPath string) {
 // FileList : 文件信息
 func FileList(userName, parentPath string) []dao.FileMessage {
 	sql := "select file_name, category, change_time, file_size from " + userName + " where parent_path=?"
-	rows, _ := util.DBConn().Query(sql, parentPath)
+	rows, _ := db.DBConn().Query(sql, parentPath)
 	var list []dao.FileMessage
 	for rows.Next() {
 		var status int8

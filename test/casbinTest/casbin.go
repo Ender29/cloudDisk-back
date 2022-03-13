@@ -15,13 +15,13 @@ func main() {
 	}
 	e, _ := casbin.NewEnforcer("test/casbinTest/model.conf", a)
 	e.LoadPolicy()
-	sub := "zhangsan"
-	obj := "data2"
-	act := "read"
-	//added, err := e.AddPolicy(sub, obj, act)
+	sub := "special"
+	obj := "/file/download"
+	act := "GET"
+	added, err := e.AddPolicy(sub, obj, act)
 	//added, err := e.AddGroupingPolicy(sub, "admin")
-	//fmt.Println(added)
-	//fmt.Println(err)
+	fmt.Println(added)
+	fmt.Println(err)
 	ok, err := e.Enforce(sub, obj, act)
 	if err != nil {
 		fmt.Println(err)

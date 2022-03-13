@@ -3,6 +3,7 @@ package controller
 import (
 	"cloudDisk/src/service"
 	"cloudDisk/src/util"
+	"cloudDisk/src/util/db"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"time"
@@ -37,6 +38,9 @@ func RegisterHandler(c *gin.Context) {
 		message.UserName = userName
 		message.Register(userPwd)
 		if message.Status == 0 {
+			enforcer := db.Enforcer
+			enforcer.LoadPolicy()
+			enforcer.AddGroupingPolicy(userName, "normal")
 			message.RegisterTime = time.Now().Format("2006-01-02 15:04:05")
 		}
 	} else {
