@@ -22,14 +22,13 @@ func HTTPInterceptor() gin.HandlerFunc {
 
 		accessToken := c.Request.Header.Get("AccessToken")
 		claims, status := util.ParseToken(accessToken)
-		//fmt.Println("status:", status)
+		//fmt.Println("accessToken: ", accessToken)
 		if c.Request.Method == "OPTIONS" {
 			c.JSON(200, gin.H{
 				"msg": "ok",
 			})
-			return
+			c.Abort()
 		} else if status == 1 {
-			//refreshToken := c.Request.Header.Get("RefreshToken")
 			conn := db.Pool.Get()
 			defer conn.Close()
 			refreshToken, _ := redis.String(conn.Do("get", accessToken))

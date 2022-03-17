@@ -20,8 +20,8 @@ func main() {
 			share.GET("/checkcode", controller.ShareCheckCodeHandler)
 		}
 	}
+	root.Use(middleware.HTTPInterceptor(), middleware.Privilege())
 	file := root.Group("/file")
-	file.Use(middleware.HTTPInterceptor(), middleware.Privilege())
 	{
 		file.GET("/closeshare", controller.ShareCloseHandler)
 		file.GET("/createurl", controller.ShareCreateURLHandler)
@@ -36,6 +36,15 @@ func main() {
 		file.POST("/upload", controller.UploadFileHandler)
 		file.GET("/merge", controller.MergeFileHandler)
 		file.GET("/download", controller.DownloadFileHandler)
+		file.POST("/preview", controller.PreviewFileHandler)
+		file.GET("/searchbyname", controller.SearchByNameHandler)
+	}
+	admin := root.Group("/admin")
+	{
+		admin.GET("/filelist", controller.FilesHandler)
+		admin.GET("/shares", controller.SharesHandler)
+		admin.GET("/users", controller.UsersHandler)
+		admin.GET("/policies", controller.PoliciesHandler)
 	}
 	if router.Run(":8080") != nil {
 		fmt.Println("地球爆炸")

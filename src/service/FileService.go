@@ -20,6 +20,32 @@ import (
 
 const UploadDir = "D:/upload/"
 
+// SearchByNameService 按文件名查找
+func SearchByNameService(userName, searchName string) []dao.FileMessage {
+	sql := "select parent_path,file_name,category,change_time,file_size from " + userName + " where file_name LIKE'%" + searchName + "%'"
+	rows, _ := db.DBConn().Query(sql)
+	var list []dao.FileMessage
+	for rows.Next() {
+		var file dao.FileMessage
+		err := rows.Scan(&file.FilePath, &file.FileName, &file.Category, &file.FileTime, &file.FileSize)
+		if err != nil {
+			return list
+		} else {
+			list = append(list, file)
+		}
+	}
+	return list
+}
+
+// PreViewFileService 获取MD5
+func PreViewFileService(userName, filePath, fileName string) string {
+	sql := "select file_md5 from " + userName + " where parent_path='" + filePath + "' " + "and file_name='" + fileName + "'"
+	fileMD5 := ""
+	row := db.DBConn().QueryRow(sql)
+	row.Scan(&fileMD5)
+	return fileMD5
+}
+
 // ShareClose : 取消分享
 func ShareClose(shareAddr string) int {
 	sql := "delete from tbl_share where share_addr='" + shareAddr + "'"
@@ -185,6 +211,8 @@ func DownloadService(userName, fileName, parentPath string) (bool, []byte) {
 	data, _ := io.ReadAll(file)
 	return false, data
 }
+
+//var voice = []string{".wav", ".mp3", ".au", ".aif", ".aiff", ".ra", ".mid"}
 
 // UploadFile : 上传文件
 func UploadFile(userName, fileMD5, fileName, parentPath, fileSize string) int8 {

@@ -15,22 +15,23 @@ func main() {
 	}
 	e, _ := casbin.NewEnforcer("test/casbinTest/model.conf", a)
 	e.LoadPolicy()
-	sub := "special"
-	obj := "/file/download"
+	//role := e.GetFilteredNamedGroupingPolicy("g", 0, "ender")[0][1]
+	//fmt.Println(e.GetPolicy())
+	sub := "admin"
+	obj := "/admin/policy"
 	act := "GET"
 	added, err := e.AddPolicy(sub, obj, act)
 	//added, err := e.AddGroupingPolicy(sub, "admin")
 	fmt.Println(added)
 	fmt.Println(err)
-	ok, err := e.Enforce(sub, obj, act)
-	if err != nil {
-		fmt.Println(err)
-	}
-	if ok == true {
-		fmt.Println("you pass!")
-		e.SavePolicy()
-	} else {
-		fmt.Println("forbid!")
-	}
-
+	//ok, err := e.Enforce(sub, obj, act)
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+	//if ok == true {
+	//	fmt.Println("you pass!")
+	//	e.SavePolicy()
+	//} else {
+	//	fmt.Println("forbid!")
+	//}
 }

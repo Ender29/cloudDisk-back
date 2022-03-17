@@ -4,6 +4,7 @@ import (
 	util "cloudDisk/src/util"
 	"cloudDisk/src/util/db"
 	"cloudDisk/src/vo"
+	"fmt"
 	"log"
 	"time"
 )
@@ -67,7 +68,8 @@ func (lm *LoginMessage) Login(userPwd string) {
 	defer conn.Close()
 	// redis 绑定token,设置过期时间
 	refreshToken, _ := util.GenerateToken(lm.UserName, userPwd, time.Hour*24)
-	conn.Do("set", lm.AccessToken, refreshToken, "EX", 3600*24)
+	_, err = conn.Do("set", lm.AccessToken, refreshToken, "EX", 3600*24)
+	fmt.Println("err:", err)
 	lm.Status = status
 	lm.FileSize = fileSize
 	lm.LatestTime = times

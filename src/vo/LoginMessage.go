@@ -7,4 +7,5 @@ type LoginMessage struct {
 	AccessToken string
 	FileSize    int64
 	Status      int8
+	Role        string
 }

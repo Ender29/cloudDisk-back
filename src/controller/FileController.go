@@ -4,6 +4,7 @@ import (
 	"cloudDisk/src/dao"
 	"cloudDisk/src/service"
 	"cloudDisk/src/util"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -15,6 +16,58 @@ import (
 	"time"
 )
 
+// SearchByNameHandler 按文件名查找
+func SearchByNameHandler(c *gin.Context) {
+	searchName := c.Query("searchName")
+	userName := util.GetName(c)
+	list := service.SearchByNameService(userName, searchName)
+	c.JSON(200, gin.H{
+		"list": list,
+	})
+}
+
+// PreviewFileHandler 文件预览
+func PreviewFileHandler(c *gin.Context) {
+	//userName := util.GetName(c)
+	filePath := c.PostForm("filePath")
+	fileName := c.PostForm("fileName")
+	userName := util.GetName(c)
+	fileMD5 := service.PreViewFileService(userName, filePath, fileName)
+	fileSuffix := path.Ext(fileName)
+	content, err := ioutil.ReadFile(service.UploadDir + fileMD5 + "_file" + fileSuffix)
+	msg := ""
+	var data string
+	var preURL string
+	var fileType string
+	var docType string
+	if err != nil || fileMD5 == "" {
+		msg = "预览失败"
+	} else if len(content) > 1024*1024*4 {
+		msg = "文件太大了"
+	} else if fileSuffix == ".png" || fileSuffix == ".bmp" || fileSuffix == ".jpg" {
+		fileType = "img"
+		preURL = "image/" + fileSuffix[1:] + ";base64,"
+		data = base64.StdEncoding.EncodeToString(content)
+	} else if fileSuffix == ".txt" || fileSuffix == ".md" {
+		fileType = "doc"
+		if fileSuffix == ".md" {
+			docType = "markdown"
+		} else {
+			docType = "text"
+		}
+		data = string(content)
+	} else {
+		msg = "暂不支持预览"
+	}
+	c.JSON(200, gin.H{
+		"msg":      msg,
+		"data":     data,
+		"preURL":   preURL,
+		"fileType": fileType,
+		"docType":  docType,
+	})
+}
+
 // ShareCloseHandler : 取消分享
 func ShareCloseHandler(c *gin.Context) {
 	shareAddr := c.Query("shareAddr")
@@ -24,7 +77,7 @@ func ShareCloseHandler(c *gin.Context) {
 	})
 }
 
-// ShareListHandler : 用户分享文件列表
+// ShareListHandler 用户分享文件列表
 func ShareListHandler(c *gin.Context) {
 	userName := util.GetName(c)
 	status, list := service.GetShareList(userName)
@@ -34,7 +87,7 @@ func ShareListHandler(c *gin.Context) {
 	})
 }
 
-// SearchByCategoryHandler : 查找不同类型文件
+// SearchByCategoryHandler 查找不同类型文件
 func SearchByCategoryHandler(c *gin.Context) {
 	userName := util.GetName(c)
 	category := c.Query("category")
@@ -44,7 +97,7 @@ func SearchByCategoryHandler(c *gin.Context) {
 	})
 }
 
-// ShareDownloadHandler : 下载分享文件
+// ShareDownloadHandler 下载分享文件
 func ShareDownloadHandler(c *gin.Context) {
 	shareName := c.Query("shareName")
 	parentPath := c.Query("parentPath")
@@ -70,7 +123,7 @@ func ShareDownloadHandler(c *gin.Context) {
 	c.Writer.Write(data)
 }
 
-// ShareFileListHandler : 获取文件列表
+// ShareFileListHandler 获取文件列表
 func ShareFileListHandler(c *gin.Context) {
 	shareName := c.Query("shareName")
 	path := c.Query("parentPath")
@@ -93,7 +146,7 @@ func ShareFileListHandler(c *gin.Context) {
 	})
 }
 
-// ShareCheckCodeHandler : 校验提取码
+// ShareCheckCodeHandler 校验提取码
 func ShareCheckCodeHandler(c *gin.Context) {
 	shareAddr := c.Query("shareAddr")
 	shareCode := c.Query("shareCode")
@@ -105,7 +158,7 @@ func ShareCheckCodeHandler(c *gin.Context) {
 	})
 }
 
-// ShareCreateURLHandler : 获取分享链接和提取码
+// ShareCreateURLHandler 获取分享链接和提取码
 func ShareCreateURLHandler(c *gin.Context) {
 	parentPath := c.Query("parentPath")
 	userName := util.GetName(c)
@@ -210,7 +263,7 @@ func MergeFileHandler(c *gin.Context) {
 	})
 }
 
-// UploadFileHandler :处理文件上传
+// UploadFileHandler 处理文件上传
 func UploadFileHandler(c *gin.Context) {
 	c.Request.ParseMultipartForm(32 << 20)
 	form, _ := c.MultipartForm()
@@ -231,7 +284,7 @@ func UploadFileHandler(c *gin.Context) {
 	})
 }
 
-// CreateFolderHandler : 创建目录
+// CreateFolderHandler 创建目录
 func CreateFolderHandler(c *gin.Context) {
 	userName := util.GetName(c)
 	fileName := c.Query("fileName")
@@ -256,7 +309,7 @@ func CreateFolderHandler(c *gin.Context) {
 	c.Writer.Write(data)
 }
 
-// DeleteFileHandler : 删除文件
+// DeleteFileHandler 删除文件
 func DeleteFileHandler(c *gin.Context) {
 	userName := util.GetName(c)
 	var message dao.FileMessage
@@ -271,7 +324,7 @@ func DeleteFileHandler(c *gin.Context) {
 	c.Writer.Write(data)
 }
 
-// RenameFileHandler : 文件重命名
+// RenameFileHandler 文件重命名
 func RenameFileHandler(c *gin.Context) {
 	var message dao.FileMessage
 	message.FilePath = c.Query("filePath")
@@ -292,7 +345,7 @@ func RenameFileHandler(c *gin.Context) {
 	}
 }
 
-// MoveFileHandler : 移动文件
+// MoveFileHandler 移动文件
 func MoveFileHandler(c *gin.Context) {
 	var message dao.FileMessage
 	message.FilePath = c.Query("filePath")
@@ -323,7 +376,7 @@ func MoveFileHandler(c *gin.Context) {
 	}
 }
 
-// FileListHandler : 文件列表
+// FileListHandler 文件列表
 func FileListHandler(c *gin.Context) {
 	//fmt.Println("hello")
 	userName := util.GetName(c)

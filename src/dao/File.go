@@ -26,14 +26,9 @@ type FileMessage struct {
 	Status   int8
 }
 
-//type UniqueFile struct {
-//	Id       string
-//	FileSha1 string
-//	FileName string
-//	FileSize string
-//	FileAddr string
-//	CreateAt string
-//	UpdateAt string
-//	Status   string
-//	Ext1     string
-//}
+type FilesList struct {
+	FileMD5    string
+	FileSize   int
+	CreateTime string
+	UpdateTime string
+}

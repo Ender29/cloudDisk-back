@@ -18,5 +18,5 @@ func init() {
 	if err != nil {
 		log.Fatalf("init enforcer fail: %s\n", err)
 	}
-	Enforcer.EnableLog(true)
+	//Enforcer.EnableLog(true)
 }

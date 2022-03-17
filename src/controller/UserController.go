@@ -19,6 +19,13 @@ func LoginHandler(c *gin.Context) {
 		userPwd, _ = util.EnPwdCode([]byte(userPwd))
 		//message.UserToken, message.LatestTime, message.Status, message.FileSize = service.Login(userName, userPwd)
 		message.Login(userPwd)
+		enforcer := db.Enforcer
+		enforcer.LoadPolicy()
+		if enforcer.HasNamedGroupingPolicy("g", message.UserName, "admin") {
+			message.Role = "admin"
+		} else {
+			message.Role = "user"
+		}
 	} else {
 		message.Status = -1
 	}
