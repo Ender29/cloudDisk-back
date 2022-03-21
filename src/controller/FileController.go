@@ -364,7 +364,7 @@ func MoveFileHandler(c *gin.Context) {
 	}
 	category := c.Query("category")
 	if message.FileName != "" && newPath != "" && userName != "" && category != "" && message.FilePath != "" {
-		if !(len(newPath) > len(message.FilePath) && message.FilePath[:len(message.FilePath)] == newPath[:len(message.FilePath)]) {
+		if !(len(newPath) > len(message.FilePath) && (message.FilePath+message.FileName+"/") == newPath[:(len(message.FilePath+message.FileName)+1)]) {
 			fmt.Println("start move")
 			temp, _ := strconv.Atoi(category)
 			message.Category = int8(temp)
@@ -372,6 +372,10 @@ func MoveFileHandler(c *gin.Context) {
 			data, _ := json.Marshal(message)
 			c.Header("content-type", "text/json")
 			c.Writer.Write(data)
+		} else {
+			c.JSON(200, gin.H{
+				"msg": "不能移动到子目录",
+			})
 		}
 	}
 }

@@ -6,9 +6,28 @@ import (
 	"cloudDisk/src/util/db"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"path"
 	"time"
 )
 
+// UploadPhotoHandler 修改头像
+func UploadPhotoHandler(c *gin.Context) {
+	form, _ := c.MultipartForm()
+	img := form.File["img"][0]
+	act := "fail"
+	img64 := ""
+	fileSuffix := path.Ext(img.Filename)
+	if img.Size < 10<<10 && fileSuffix == ".png" {
+		img64 = service.UploadPhotoService(util.GetName(c), img)
+		act = "success"
+	}
+	c.JSON(200, gin.H{
+		"act": act,
+		"img": img64,
+	})
+}
+
+// LoginHandler 登录
 func LoginHandler(c *gin.Context) {
 	userName := c.PostForm("userName")
 	userPwd := c.PostForm("userPwd")

@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+	//gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	root := router.Group("/")
 	{
@@ -45,6 +46,10 @@ func main() {
 		admin.GET("/shares", controller.SharesHandler)
 		admin.GET("/users", controller.UsersHandler)
 		admin.GET("/policies", controller.PoliciesHandler)
+	}
+	user := root.Group("/user")
+	{
+		user.POST("/uploadphoto", controller.UploadPhotoHandler)
 	}
 	if router.Run(":8080") != nil {
 		fmt.Println("地球爆炸")

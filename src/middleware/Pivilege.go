@@ -19,7 +19,11 @@ func Privilege() gin.HandlerFunc {
 		if bl {
 			c.Next()
 		} else {
+			c.JSON(200, gin.H{
+				"privilege": "fail",
+			})
 			c.Abort()
 		}
 	}
+
 }

@@ -2,6 +2,7 @@ package util
 
 import (
 	"archive/zip"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,6 +12,11 @@ import (
 	"strings"
 	"time"
 )
+
+// ToBase64 转base64
+func ToBase64(b []byte) string {
+	return base64.StdEncoding.EncodeToString(b)
+}
 
 // GetDays
 // date2 大于 date1
@@ -90,39 +96,6 @@ func Zip(src_dir string, archive *zip.Writer) {
 		return nil
 	})
 }
-
-//func Zip(srcDir string, zw *zip.Writer) {
-//
-//	// 遍历路径信息
-//	filepath.Walk(srcDir, func(path string, info os.FileInfo, _ error) error {
-//
-//		// 如果是源路径，提前进行下一个遍历
-//		if path == srcDir {
-//			return nil
-//		}
-//
-//		// 获取：文件头信息
-//		header, _ := zip.FileInfoHeader(info)
-//		header.Name = strings.TrimPrefix(path,  filepath.Dir(srcDir) +`/`)
-//
-//		// 判断：文件是不是文件夹
-//		if info.IsDir() {
-//			header.Name += `/`
-//		} else {
-//			// 设置：zip的文件压缩算法
-//			header.Method = zip.Deflate
-//		}
-//
-//		// 创建：压缩包头部信息
-//		writer, _ := zw.CreateHeader(header)
-//		if !info.IsDir() {
-//			file, _ := os.Open(path)
-//			defer file.Close()
-//			io.Copy(writer, file)
-//		}
-//		return nil
-//	})
-//}
 
 // IsExist 判断文件是否存在
 func IsExist(filePath string) (bool, error) {

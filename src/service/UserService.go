@@ -4,14 +4,30 @@ import (
 	util "cloudDisk/src/util"
 	"cloudDisk/src/util/db"
 	"cloudDisk/src/vo"
-	"fmt"
+	"github.com/garyburd/redigo/redis"
+	"io"
 	"log"
+	"mime/multipart"
 	"time"
 )
 
 type LoginMessage vo.LoginMessage
 type RegisterMessage vo.RegisterMessage
 
+// UploadPhotoService 存储头像
+func UploadPhotoService(userName string, img *multipart.FileHeader) string {
+	file, _ := img.Open()
+	defer file.Close()
+	b, _ := io.ReadAll(file)
+	imgBase64 := util.ToBase64(b)
+	conn := db.Pool.Get()
+	defer conn.Close()
+	imgBase64 = "data:image/png;base64," + imgBase64
+	conn.Do("set", userName+"'s photo", imgBase64)
+	return imgBase64
+}
+
+// Login 登录
 func (lm *LoginMessage) Login(userPwd string) {
 	var times string
 	var status int8 = 0
@@ -23,7 +39,7 @@ func (lm *LoginMessage) Login(userPwd string) {
 	} else {
 		for rows.Next() {
 			var size int64
-			err := rows.Scan(&size)
+			err = rows.Scan(&size)
 			if err != nil {
 				size = 0
 			}
@@ -40,7 +56,7 @@ func (lm *LoginMessage) Login(userPwd string) {
 		var lastime string
 		var userpwd string
 		// 获取查询结果
-		err := rows.Scan(&username, &userpwd, &lastime)
+		err = rows.Scan(&username, &userpwd, &lastime)
 		if err != nil {
 			status = 2
 		}
@@ -69,10 +85,10 @@ func (lm *LoginMessage) Login(userPwd string) {
 	// redis 绑定token,设置过期时间
 	refreshToken, _ := util.GenerateToken(lm.UserName, userPwd, time.Hour*24)
 	_, err = conn.Do("set", lm.AccessToken, refreshToken, "EX", 3600*24)
-	fmt.Println("err:", err)
 	lm.Status = status
 	lm.FileSize = fileSize
 	lm.LatestTime = times
+	lm.HeadPhoto, _ = redis.String(conn.Do("get", lm.UserName+"'s photo"))
 }
 
 func (rm *RegisterMessage) Register(userPwd string) {

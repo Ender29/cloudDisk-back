@@ -8,4 +8,5 @@ type LoginMessage struct {
 	FileSize    int64
 	Status      int8
 	Role        string
+	HeadPhoto   string
 }

@@ -86,28 +86,5 @@ func Zip(src_dir string, zip_file_name string) {
 }
 
 func main() {
-	var eleLen int
-	var givenNUM int
-	var TF bool
-
-	fmt.Println("Enter the length of array: ")
-	fmt.Scanln(&eleLen)
-
-	arr := make([]int, eleLen)
-	for i := 0; i < eleLen; i++ {
-
-		fmt.Scanln(&arr[i])
-	}
-	fmt.Println("Enter number: ")
-	fmt.Scanln(&givenNUM)
-
-	for i := 0; i < eleLen; i++ {
-		if arr[i] >= givenNUM {
-			continue
-		} else {
-			TF = false
-		}
-	}
-	fmt.Println(TF)
-
+	fmt.Println(2 << 10)
 }

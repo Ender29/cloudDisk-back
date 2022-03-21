@@ -3,6 +3,7 @@ package middleware
 import (
 	"cloudDisk/src/util"
 	"cloudDisk/src/util/db"
+	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
 	"time"
@@ -27,7 +28,9 @@ func HTTPInterceptor() gin.HandlerFunc {
 			c.JSON(200, gin.H{
 				"msg": "ok",
 			})
-			c.Abort()
+			//c.Abort()
+			fmt.Println("options")
+			return
 		} else if status == 1 {
 			conn := db.Pool.Get()
 			defer conn.Close()
@@ -45,13 +48,14 @@ func HTTPInterceptor() gin.HandlerFunc {
 					"timeout": 1,
 					"msg":     "登录已过期",
 				})
-				c.Abort()
+				return
 			}
 			conn.Do("del", accessToken)
 		} else if status == 0 {
 			c.Set("userName", claims.Username)
 			c.Next()
 		} else {
+			fmt.Println("forbid")
 			c.Abort()
 		}
 	}
