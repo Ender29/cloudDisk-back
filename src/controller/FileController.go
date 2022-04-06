@@ -34,7 +34,7 @@ func PreviewFileHandler(c *gin.Context) {
 	userName := util.GetName(c)
 	fileMD5 := service.PreViewFileService(userName, filePath, fileName)
 	fileSuffix := path.Ext(fileName)
-	content, err := ioutil.ReadFile(service.UploadDir + fileMD5 + "_file" + fileSuffix)
+	content, err := ioutil.ReadFile(service.UploadDir + fileMD5 + "_file")
 	msg := ""
 	var data string
 	var preURL string
@@ -61,6 +61,7 @@ func PreviewFileHandler(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{
 		"msg":      msg,
+		"type":     "info",
 		"data":     data,
 		"preURL":   preURL,
 		"fileType": fileType,
@@ -81,6 +82,7 @@ func ShareCloseHandler(c *gin.Context) {
 func ShareListHandler(c *gin.Context) {
 	userName := util.GetName(c)
 	status, list := service.GetShareList(userName)
+	fmt.Println(list)
 	c.JSON(200, gin.H{
 		"status": status,
 		"list":   list,
@@ -135,14 +137,8 @@ func ShareFileListHandler(c *gin.Context) {
 	if shareName != "" && parentPath != "" {
 		message = service.FileList(shareName, parentPath)
 	}
-	token := ""
-	newToken, bl := c.Get("netToken")
-	if bl {
-		token = newToken.(string)
-	}
 	c.JSON(200, gin.H{
-		"netToken": token,
-		"list":     message,
+		"list": message,
 	})
 }
 
@@ -230,33 +226,19 @@ func MergeFileHandler(c *gin.Context) {
 	parentPath := c.Query("parentPath")
 	fileSize := c.Query("fileSize")
 	userName := util.GetName(c)
-	srcDir := service.UploadDir + fileMD5
-	var fileList []string
-	fileList, err := util.ListDir(srcDir, fileList)
-	fileSuffix := path.Ext(fileName)
-	if err != nil {
-		fmt.Println("获取文件列表失败", err)
-	}
-	uploadName := service.UploadDir + fileMD5 + "_file" + fileSuffix
+	//uploadName := service.UploadDir + fileMD5 + "_file" + fileSuffix
+	uploadName := service.UploadDir + fileMD5 + "_file"
 	isExit, _ := util.IsExist(uploadName)
 	if isExit {
 		service.UploadFile(userName, fileMD5, fileName, parentPath, fileSize)
 	} else {
-		f, err := os.OpenFile(uploadName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-		if err != nil {
-			fmt.Println("生成文件失败:", err)
+		err := service.MergeFile(uploadName, fileMD5)
+		if err == nil {
+			if !strings.HasSuffix(parentPath, "/") {
+				parentPath += "/"
+			}
+			service.UploadFile(userName, fileMD5, fileName, parentPath, fileSize)
 		}
-		// 合并区块
-		length := len(fileList)
-		for i := 0; i < length; i++ {
-			data, _ := ioutil.ReadFile(srcDir + "/" + strconv.Itoa(i))
-			f.Write(data)
-		}
-		defer f.Close()
-		if !strings.HasSuffix(parentPath, "/") {
-			parentPath += "/"
-		}
-		service.UploadFile(userName, fileMD5, fileName, parentPath, fileSize)
 	}
 	c.JSON(200, gin.H{
 		"status": 0,
@@ -267,7 +249,6 @@ func MergeFileHandler(c *gin.Context) {
 func UploadFileHandler(c *gin.Context) {
 	c.Request.ParseMultipartForm(32 << 20)
 	form, _ := c.MultipartForm()
-	fmt.Println(form.File)
 	file := form.File["data"][0]
 	current := form.Value["current"][0]
 	fileMD5 := form.Value["fileMD5"][0]

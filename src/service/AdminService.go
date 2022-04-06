@@ -2,19 +2,85 @@ package service
 
 import (
 	"cloudDisk/src/dao"
+	"cloudDisk/src/util"
 	"cloudDisk/src/util/db"
+	"os"
 )
+
+// DelFile 管理员删除文件
+func DelFile(fileMD5 string) {
+	os.Remove(UploadDir + fileMD5 + "_file")
+}
+
+// Logout 注销账户
+func Logout(userName string) int {
+	enforcer := db.Enforcer
+	enforcer.LoadPolicy()
+	bl, _ := enforcer.RemoveFilteredNamedGroupingPolicy("g", 0, userName)
+	if bl {
+		sql := "delete from " + userName
+		db.DBConn().Exec(sql)
+		sql = "drop table " + userName + "_share"
+		db.DBConn().Exec(sql)
+		sql = "drop table " + userName
+		db.DBConn().Exec(sql)
+		sql = "delete from tbl_user where user_name='" + userName + "'"
+		db.DBConn().Exec(sql)
+		sql = "delete from tbl_share where share_name='" + userName + "'"
+		db.DBConn().Exec(sql)
+		conn := db.Pool.Get()
+		defer conn.Close()
+		conn.Do("del", userName+"'s photo")
+		return 0
+	}
+	return -1
+}
+
+// SetRoleService 设置角色
+func SetRoleService(oldPolicy, newPolicy []string) bool {
+	enforcer := db.Enforcer
+	enforcer.LoadPolicy()
+	bl, _ := enforcer.UpdateGroupingPolicy(oldPolicy, newPolicy)
+	return bl
+}
+
+// DelPolicyService 添加policy
+func DelPolicyService(policy dao.Policy) bool {
+	enforcer := db.Enforcer
+	enforcer.LoadPolicy()
+	bl, _ := enforcer.RemovePolicy(policy.Sub, policy.Obj, policy.Act)
+	return bl
+}
+
+// SetPolicyService 添加policy
+func SetPolicyService(oldPolicy, newPolicy []string) bool {
+	enforcer := db.Enforcer
+	enforcer.LoadPolicy()
+	bl, _ := enforcer.UpdatePolicy(oldPolicy, newPolicy)
+	return bl
+}
+
+// AddPolicyService 添加policy
+func AddPolicyService(policy dao.Policy) bool {
+	enforcer := db.Enforcer
+	enforcer.LoadPolicy()
+	bl, _ := enforcer.AddPolicy(policy.Sub, policy.Obj, policy.Act)
+	return bl
+}
 
 // GetFiles 获取文件列表
 func GetFiles() []dao.FilesList {
-	sql := "select file_md5, file_size, create_at, update_at from tbl_file"
+	sql := "select file_md5, file_size, create_at, update_at from tbl_file order by file_size desc"
 	rows, _ := db.DBConn().Query(sql)
 	var list []dao.FilesList
 	for rows.Next() {
 		var temp dao.FilesList
 		err := rows.Scan(&temp.FileMD5, &temp.FileSize, &temp.CreateTime, &temp.UpdateTime)
 		if err == nil {
-			list = append(list, temp)
+			bl, _ := util.IsExist(UploadDir + temp.FileMD5 + "_file")
+			if bl {
+				list = append(list, temp)
+			}
 		}
 	}
 	return list

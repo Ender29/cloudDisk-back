@@ -46,10 +46,21 @@ func main() {
 		admin.GET("/shares", controller.SharesHandler)
 		admin.GET("/users", controller.UsersHandler)
 		admin.GET("/policies", controller.PoliciesHandler)
+		admin.POST("/addpolicy", controller.AddPolicyHandler)
+		admin.POST("/setpolicy", controller.SetPolicyHandler)
+		admin.GET("/delpolicy", controller.DelPolicyHandler)
+		admin.POST("/setrole", controller.SetRoleHandler)
+		admin.POST("/logout", controller.LogoutHandler)
+		admin.GET("/closeshare", controller.CloseShareHandler)
+		admin.POST("/delfile", controller.DelFileHandler)
+		admin.POST("/upload", controller.AdminUpload)
+		admin.GET("/check", controller.AdminCheck)
+		admin.GET("/merge", controller.AdminMerge)
 	}
 	user := root.Group("/user")
 	{
 		user.POST("/uploadphoto", controller.UploadPhotoHandler)
+		user.POST("/uprole", controller.UploadRoleHandler)
 	}
 	if router.Run(":8080") != nil {
 		fmt.Println("地球爆炸")

@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	a, err := xormadapter.NewAdapter("mysql", "root:123456@tcp(124.223.78.104:3306)/")
+	a, err := xormadapter.NewAdapter("mysql", "root:123456@tcp(127.0.0.1:3306)/")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -17,11 +17,15 @@ func main() {
 	e.LoadPolicy()
 	//role := e.GetFilteredNamedGroupingPolicy("g", 0, "ender")[0][1]
 	//fmt.Println(e.GetPolicy())
-	sub := "admin"
-	obj := "/admin/policy"
-	act := "GET"
-	added, err := e.AddPolicy(sub, obj, act)
-	//added, err := e.AddGroupingPolicy(sub, "admin")
+	//sub := "ender"
+	//obj := "/file/sharelist"
+	//act := "GET"
+	//added, err := e.AddPolicy(sub, obj, act)
+	//added, err := e.UpdateGroupingPolicy([]string{"ender", "normal"}, []string{"ender", "special"})
+	//added, err := e.AddGroupingPolicy(sub, "normal")
+	//added, err := e.RemovePolicy(sub, obj, act)
+	added, err := e.RemoveFilteredNamedGroupingPolicy("g", 0, "asd")
+
 	fmt.Println(added)
 	fmt.Println(err)
 	//ok, err := e.Enforce(sub, obj, act)

@@ -16,8 +16,8 @@ func init() {
 		IdleTimeout: 300 * time.Second,
 		Wait:        true,
 		Dial: func() (redis.Conn, error) {
-			con, err := redis.Dial("tcp", "124.223.78.104:9039",
-				redis.DialPassword("cloudGolang29"),
+			con, err := redis.Dial("tcp", "127.0.0.1:6379",
+				//redis.DialPassword("cloudGolang29"),
 				//redis.DialDatabase(),
 				//redis.DialConnectTimeout(),
 				redis.DialReadTimeout(300*time.Second),

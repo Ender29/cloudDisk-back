@@ -14,6 +14,14 @@ import (
 type LoginMessage vo.LoginMessage
 type RegisterMessage vo.RegisterMessage
 
+// UpRoleService 升级权限
+func UpRoleService(userName, newRole string) {
+	enforcer := db.Enforcer
+	enforcer.LoadPolicy()
+	oldRole := enforcer.GetFilteredNamedGroupingPolicy("g", 0, userName)[0][1]
+	enforcer.UpdateGroupingPolicy([]string{userName, oldRole}, []string{userName, newRole})
+}
+
 // UploadPhotoService 存储头像
 func UploadPhotoService(userName string, img *multipart.FileHeader) string {
 	file, _ := img.Open()
@@ -139,28 +147,6 @@ func (rm *RegisterMessage) Register(userPwd string) {
 	}
 	// 返回状态码
 	rm.Status = status
-}
-
-// Logout : 注销账户
-func Logout(userName, userToken, status *string) {
-	sql := "delete from tbl_user where user_name=? and user_token=?"
-	stmt, _ := db.DBConn().Prepare(sql)
-	_, err := stmt.Exec(userName, userToken)
-	if err != nil {
-		*status = "1"
-	}
-	sql = "drop table " + *userName
-	stmt, _ = db.DBConn().Prepare(sql)
-	_, err = stmt.Exec()
-	if err != nil {
-		*status = "2"
-	}
-	sql = "drop table " + *userName + "_share"
-	stmt, _ = db.DBConn().Prepare(sql)
-	_, err = stmt.Exec()
-	if err != nil {
-		*status = "3"
-	}
 }
 
 // ChangePwd : 修改密码

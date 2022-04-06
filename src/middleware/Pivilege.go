@@ -20,7 +20,8 @@ func Privilege() gin.HandlerFunc {
 			c.Next()
 		} else {
 			c.JSON(200, gin.H{
-				"privilege": "fail",
+				"msg":  "您没有该权限哦:)",
+				"type": "warning",
 			})
 			c.Abort()
 		}

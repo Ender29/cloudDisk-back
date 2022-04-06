@@ -59,7 +59,8 @@ func ShareClose(shareAddr string) int {
 
 // GetShareList : 查询用户已分享的文件
 func GetShareList(userName string) (int8, dao.ShareList) {
-	sql := "select a.share_addr,a.share_code,a.signup_at,(a.days-DATEDIFF(now(),a.signup_at)),b.file_name from tbl_share as a inner join " + userName + "_share as b;"
+	sql := "select a.share_addr, a.share_code, a.signup_at, (a.days-DATEDIFF(now(), a.signup_at)), b.file_name from tbl_share as a RIGHT JOIN " + userName + "_share as b on a.share_addr=b.share_addr;"
+	fmt.Println(sql)
 	var list dao.ShareList
 	rows, err := db.DBConn().Query(sql)
 	if err != nil {
@@ -142,7 +143,7 @@ func CreateURL(userName, fileName, parentPath, days string) (string, string) {
 			_, err := stmt.Exec()
 			if err == nil {
 				sql = "insert into " + userName + "_share (parent_path,file_name,share_addr) values('" + parentPath + "','" + fileName + "','" + addr + "')"
-				fmt.Println(sql)
+				//fmt.Println(sql)
 				db.DBConn().Exec(sql)
 				break // 插入成功就中断循环
 			}
@@ -154,7 +155,7 @@ func CreateURL(userName, fileName, parentPath, days string) (string, string) {
 
 }
 
-// IsDir : 判断是否是文件夹
+// DownloadService 下载文件
 func DownloadService(userName, fileName, parentPath string) (bool, []byte) {
 	sql := "select category,file_md5 from " + userName + " where file_name='" + fileName + "' and parent_path='" + parentPath + "' limit 1"
 	//fmt.Println(sql)
@@ -163,6 +164,10 @@ func DownloadService(userName, fileName, parentPath string) (bool, []byte) {
 	var category int
 	var fileMD5 string
 	row.Scan(&category, &fileMD5)
+	if len(fileMD5) > 0 {
+		sql = "update tbl_file set update_at=now() where file_md5='" + fileMD5 + "'"
+		db.DBConn().Exec(sql)
+	}
 	//fmt.Println(category)
 	// 判断是否是文件夹
 	if category == 5 {
@@ -184,15 +189,24 @@ func DownloadService(userName, fileName, parentPath string) (bool, []byte) {
 					FilePath: parent_path,
 					FileMD5:  file_md5,
 				})
+				if len(file_md5) > 0 {
+					sql = "update tbl_file set update_at=now() where file_md5='" + file_md5 + "'"
+					db.DBConn().Exec(sql)
+				}
 			}
 		}
 		downPath := UploadDir + userName + strconv.FormatInt(time, 10)
 		os.MkdirAll(downPath+"/", 0666)
 		for i := range list {
 			dirPath := downPath + list[i].FilePath
-			fileSuffix := path.Ext(list[i].FileName)
+			//fileSuffix := path.Ext(list[i].FileName)
 			os.MkdirAll(dirPath, 0666)
-			util.Copy(UploadDir+list[i].FileMD5+"_file"+fileSuffix, dirPath+list[i].FileName)
+			bl, _ := util.IsExist(UploadDir + list[i].FileMD5 + "_file")
+			// 如果不存在 需要重新合并
+			if !bl {
+				MergeFile(dirPath+list[i].FileName, list[i].FileMD5)
+			}
+			util.Copy(UploadDir+list[i].FileMD5+"_file", dirPath+list[i].FileName)
 		}
 		// 预防：旧文件无法覆盖
 		//zipName := downPath + "/" + fileName + ".zip"
@@ -206,13 +220,39 @@ func DownloadService(userName, fileName, parentPath string) (bool, []byte) {
 		return true, buf.Bytes()
 	}
 	// 文件直接读取数据
-	file, _ := os.Open(UploadDir + fileMD5 + "_file" + path.Ext(fileName))
+	//file, _ := os.Open(UploadDir + fileMD5 + "_file" + path.Ext(fileName))
+	bl, _ := util.IsExist(UploadDir + fileMD5 + "_file")
+	if !bl {
+		MergeFile(UploadDir+fileMD5+"_file", fileMD5)
+	}
+	file, _ := os.Open(UploadDir + fileMD5 + "_file")
 	defer file.Close()
 	data, _ := io.ReadAll(file)
 	return false, data
 }
 
-//var voice = []string{".wav", ".mp3", ".au", ".aif", ".aiff", ".ra", ".mid"}
+// MergeFile 合并文件
+func MergeFile(uploadName, fileMD5 string) error {
+	srcDir := UploadDir + fileMD5
+	var fileList []string
+	fileList, err := util.ListDir(srcDir, fileList)
+	//fileSuffix := path.Ext(fileName)
+	if err != nil {
+		return err
+	}
+	f, err := os.OpenFile(uploadName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	defer f.Close()
+	if err != nil {
+		return err
+	}
+	// 合并区块
+	length := len(fileList)
+	for i := 0; i < length; i++ {
+		data, _ := ioutil.ReadFile(srcDir + "/" + strconv.Itoa(i))
+		f.Write(data)
+	}
+	return nil
+}
 
 // UploadFile : 上传文件
 func UploadFile(userName, fileMD5, fileName, parentPath, fileSize string) int8 {
@@ -280,8 +320,9 @@ func CreateCatalog(userName, fileName, theTime, path string) int8 {
 
 // DeleteFile : 删除文件
 func DeleteFile(message *dao.FileMessage, userName string) {
-	sql := "select parent_path, file_name, file_size, category from " + userName + " where parent_path=? and file_name=?"
-	rows, err := db.DBConn().Query(sql, message.FilePath, message.FileName)
+	sql := "select parent_path, file_name, file_size, category from " + userName + " where parent_path='" + message.FilePath + "' and file_name='" + message.FileName + "'"
+	fmt.Println(sql)
+	rows, err := db.DBConn().Query(sql)
 	if err != nil {
 		message.Status = 1
 	}
@@ -294,7 +335,7 @@ func DeleteFile(message *dao.FileMessage, userName string) {
 	}
 	if message.Status == 0 {
 		sql = "delete from tbl_share where share_addr=(select share_addr from " + userName + "_share where parent_path='" + message.FilePath + "' and file_name='" + message.FileName + "')"
-		fmt.Println(sql)
+		//fmt.Println(sql)
 		db.DBConn().Exec(sql)
 		sql = "delete from " + userName + " where parent_path=? and file_name=?"
 		stmt, _ := db.DBConn().Prepare(sql)
@@ -310,7 +351,7 @@ func DeleteFile(message *dao.FileMessage, userName string) {
 			length := strconv.Itoa(utf8.RuneCountInString(str))
 			// 先删了分享表中的
 			sql = "delete from tbl_share where share_addr=(select share_addr from " + userName + "_share where mid(parent_path, 1, " + length + ")='" + str + "')"
-			fmt.Println(sql)
+			//fmt.Println(sql)
 			db.DBConn().Exec(sql)
 			sql = "delete from " + userName + " where mid(parent_path, 1, " + length + ")='" + str + "'"
 			stmt, _ = db.DBConn().Prepare(sql)

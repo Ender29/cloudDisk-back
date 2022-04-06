@@ -10,6 +10,24 @@ import (
 	"time"
 )
 
+// UploadRoleHandler 升级权限
+func UploadRoleHandler(c *gin.Context) {
+	username := util.GetName(c)
+	role := c.PostForm("role")
+	if role == "admin" {
+		c.JSON(200, gin.H{
+			"msg":  "升级失败！",
+			"type": "error",
+		})
+		return
+	}
+	service.UpRoleService(username, role)
+	c.JSON(200, gin.H{
+		"msg":  "升级成功！",
+		"type": "success",
+	})
+}
+
 // UploadPhotoHandler 修改头像
 func UploadPhotoHandler(c *gin.Context) {
 	form, _ := c.MultipartForm()
@@ -42,6 +60,7 @@ func LoginHandler(c *gin.Context) {
 		enforcer.LoadPolicy()
 		if enforcer.HasNamedGroupingPolicy("g", message.UserName, "admin") {
 			message.Role = "admin"
+			message.Status = 0
 		} else {
 			message.Role = "user"
 		}
@@ -74,23 +93,6 @@ func RegisterHandler(c *gin.Context) {
 	}
 	c.Header("content-type", "text/json")
 	c.JSON(200, message)
-}
-
-//	LogoutHandler : 注销账户
-func LogoutHandler(c *gin.Context) {
-	userName := util.GetName(c)
-	userToken := c.Query("token")
-	status := "0"
-	params := make(map[string]string, 3)
-	if userName != "" && userToken != "" {
-		service.Logout(&userName, &userToken, &status)
-	}
-	params["userName"] = userName
-	params["userToken"] = userToken
-	params["status"] = status
-	data, _ := json.Marshal(params)
-	c.Header("content-type", "text/json")
-	c.Writer.Write(data)
 }
 
 // ChangePwdHandler : 修改密码

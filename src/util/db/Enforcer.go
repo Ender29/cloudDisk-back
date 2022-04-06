@@ -10,7 +10,7 @@ var Enforcer *casbin.Enforcer
 
 //初始化 enforcer
 func init() {
-	adapter, err := xormadapter.NewAdapter("mysql", "root:123456@tcp(124.223.78.104:3306)/")
+	adapter, err := xormadapter.NewAdapter("mysql", "root:123456@tcp(127.0.0.1:3306)/")
 	if err != nil {
 		log.Fatalf("init adapter fail: %s\n", err)
 	}

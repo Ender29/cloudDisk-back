@@ -11,11 +11,3 @@ type User struct {
 	SignupAt   string
 	LastActive string
 }
-
-type Policies []Policy
-
-type Policy struct {
-	Sub string
-	Obj string
-	Act string
-}
