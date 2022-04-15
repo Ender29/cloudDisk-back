@@ -4,8 +4,22 @@ import (
 	"cloudDisk/src/dao"
 	"cloudDisk/src/util"
 	"cloudDisk/src/util/db"
+	"fmt"
 	"os"
 )
+
+// AdminUploadFile 管理员上传
+func AdminUploadFile(fileMD5, fileName, fileSize string) {
+	sql := "insert into tbl_file (file_md5,file_name,file_size) values('" + fileMD5 + "',\"" + fileName + "\",'" + fileSize + "')"
+	stmt, err := db.DBConn().Prepare(sql)
+	if err != nil {
+		fmt.Println("UploadFile insert tbl_file:", err)
+	}
+	_, err = stmt.Exec()
+	if err != nil {
+		fmt.Println(err)
+	}
+}
 
 // DelFile 管理员删除文件
 func DelFile(fileMD5 string) {

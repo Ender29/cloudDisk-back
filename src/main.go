@@ -21,6 +21,7 @@ func main() {
 			share.GET("/checkcode", controller.ShareCheckCodeHandler)
 		}
 	}
+	// 身份认证，
 	root.Use(middleware.HTTPInterceptor(), middleware.Privilege())
 	file := root.Group("/file")
 	{

@@ -29,7 +29,7 @@ func HTTPInterceptor() gin.HandlerFunc {
 				"msg": "ok",
 			})
 			//c.Abort()
-			fmt.Println("options")
+			//fmt.Println("options")
 			return
 		} else if status == 1 {
 			conn := db.Pool.Get()

@@ -17,14 +17,14 @@ func main() {
 	e.LoadPolicy()
 	//role := e.GetFilteredNamedGroupingPolicy("g", 0, "ender")[0][1]
 	//fmt.Println(e.GetPolicy())
-	//sub := "ender"
-	//obj := "/file/sharelist"
-	//act := "GET"
-	//added, err := e.AddPolicy(sub, obj, act)
+	sub := "a"
+	obj := "/file/sharelist"
+	act := "GET"
+	added, err := e.AddPolicy(sub, obj, act)
 	//added, err := e.UpdateGroupingPolicy([]string{"ender", "normal"}, []string{"ender", "special"})
 	//added, err := e.AddGroupingPolicy(sub, "normal")
 	//added, err := e.RemovePolicy(sub, obj, act)
-	added, err := e.RemoveFilteredNamedGroupingPolicy("g", 0, "asd")
+	//added, err := e.RemoveFilteredNamedGroupingPolicy("g", 0, "asd")
 
 	fmt.Println(added)
 	fmt.Println(err)

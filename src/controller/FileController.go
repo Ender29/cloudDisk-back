@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -31,42 +32,43 @@ func PreviewFileHandler(c *gin.Context) {
 	//userName := util.GetName(c)
 	filePath := c.PostForm("filePath")
 	fileName := c.PostForm("fileName")
+	category := c.PostForm("category")
 	userName := util.GetName(c)
 	fileMD5 := service.PreViewFileService(userName, filePath, fileName)
 	fileSuffix := path.Ext(fileName)
-	content, err := ioutil.ReadFile(service.UploadDir + fileMD5 + "_file")
-	msg := ""
-	var data string
-	var preURL string
-	var fileType string
-	var docType string
+	file, _ := os.Open(service.UploadDir + fileMD5 + "_file")
+	defer file.Close()
+	content, err := io.ReadAll(file)
+	response := gin.H{}
 	if err != nil || fileMD5 == "" {
-		msg = "预览失败"
+		response["msg"] = "预览失败"
+	} else if category != "3" && category != "4" {
+		response["msg"] = "暂不支持预览"
 	} else if len(content) > 1024*1024*4 {
-		msg = "文件太大了"
+		response["msg"] = "文件太大了"
 	} else if fileSuffix == ".png" || fileSuffix == ".bmp" || fileSuffix == ".jpg" {
-		fileType = "img"
-		preURL = "image/" + fileSuffix[1:] + ";base64,"
-		data = base64.StdEncoding.EncodeToString(content)
+		response["fileType"] = "img"
+		response["preURL"] = "image/" + fileSuffix[1:] + ";base64,"
+		response["data"] = base64.StdEncoding.EncodeToString(content)
 	} else if fileSuffix == ".txt" || fileSuffix == ".md" {
-		fileType = "doc"
+		var docType string
+		response["fileType"] = "doc"
 		if fileSuffix == ".md" {
 			docType = "markdown"
 		} else {
 			docType = "text"
 		}
-		data = string(content)
+		response["docType"] = docType
+		response["data"] = string(content)
+	} else if fileSuffix == ".docx" {
+		c.Header("Content-Type", "application/octect-stream;")
+		c.Writer.Write(content)
+		return
 	} else {
-		msg = "暂不支持预览"
+		response["msg"] = "暂不支持预览"
 	}
-	c.JSON(200, gin.H{
-		"msg":      msg,
-		"type":     "info",
-		"data":     data,
-		"preURL":   preURL,
-		"fileType": fileType,
-		"docType":  docType,
-	})
+	response["type"] = "info"
+	c.JSON(200, response)
 }
 
 // ShareCloseHandler : 取消分享

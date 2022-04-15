@@ -34,10 +34,15 @@ func AdminUpload(c *gin.Context) {
 // AdminMerge 管理员合并
 func AdminMerge(c *gin.Context) {
 	fileMD5 := c.Query("fileMD5")
+	fileName := c.Query("fileName")
+	fileSize := c.Query("fileSize")
 	uploadName := service.UploadDir + fileMD5 + "_file"
 	isExit, _ := util.IsExist(uploadName)
 	if !isExit {
-		service.MergeFile(uploadName, fileMD5)
+		err := service.MergeFile(uploadName, fileMD5)
+		if err == nil {
+			service.AdminUploadFile(fileMD5, fileName, fileSize)
+		}
 	}
 	c.JSON(200, gin.H{
 		"status": 0,
