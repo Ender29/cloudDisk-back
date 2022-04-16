@@ -58,7 +58,7 @@ func SetRoleService(oldPolicy, newPolicy []string) bool {
 	return bl
 }
 
-// DelPolicyService 添加policy
+// DelPolicyService 删除policy
 func DelPolicyService(policy dao.Policy) bool {
 	enforcer := db.Enforcer
 	enforcer.LoadPolicy()
@@ -66,7 +66,7 @@ func DelPolicyService(policy dao.Policy) bool {
 	return bl
 }
 
-// SetPolicyService 添加policy
+// SetPolicyService 设置policy
 func SetPolicyService(oldPolicy, newPolicy []string) bool {
 	enforcer := db.Enforcer
 	enforcer.LoadPolicy()

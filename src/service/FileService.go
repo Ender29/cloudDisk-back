@@ -265,7 +265,7 @@ func UploadFile(userName, fileMD5, fileName, parentPath, fileSize string) int8 {
 		category = 2
 	} else if fileSuffix == ".png" || fileSuffix == ".gif" || fileSuffix == ".jpg" || fileSuffix == ".raw" || fileSuffix == ".bmp" || fileSuffix == ".tiff" || fileSuffix == ".psd" || fileSuffix == ".svg" {
 		category = 3
-	} else if fileSuffix == ".xls" || fileSuffix == ".txt" || fileSuffix == ".xlsx" || fileSuffix == ".csv" || fileSuffix == ".ppt" || fileSuffix == ".doc" || fileSuffix == ".docx" || fileSuffix == ".pptx" {
+	} else if fileSuffix == ".xls" || fileSuffix == ".txt" || fileSuffix == ".xlsx" || fileSuffix == ".csv" || fileSuffix == ".ppt" || fileSuffix == ".doc" || fileSuffix == ".docx" || fileSuffix == ".pptx" || fileSuffix == ".md" {
 		category = 4
 	}
 	// warning:文件名带单引号

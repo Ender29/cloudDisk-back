@@ -86,5 +86,5 @@ func Zip(src_dir string, zip_file_name string) {
 }
 
 func main() {
-	fmt.Println(2 << 10)
+	fmt.Println("asd")
 }
